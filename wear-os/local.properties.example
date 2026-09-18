@@ -1,0 +1,18 @@
+## This file is used by Android Studio / Gradle (sdk.dir is usually auto-added).
+## Copy to local.properties and set sdk.dir + orchestrator.ws.
+
+## Hosted Epoch / Render demo (physical watch over the internet):
+orchestrator.ws=wss://rakshak-80hs.onrender.com/care
+
+## Local laptop on same Wi-Fi as the watch — replace with your LAN IP:
+## orchestrator.ws=ws://192.168.1.42:3001/care
+## Windows Mobile Hotspot gateway (typical):
+## orchestrator.ws=ws://192.168.137.1:3001/care
+## Emulator builds can omit this line (defaults to ws://10.0.2.2:3001/care).
+## Legacy .../ws URLs are rewritten to /care by the watch client.
+## After changing this file: Gradle sync + rebuild/reinstall the APK.
+
+## ---- Ally (deployed API) ----
+## HTTPS URL from `cdk deploy` output ApiUrl, and the device key printed by ally/scripts/put_secrets.py
+## ally.api=https://xxxxxxxx.execute-api.us-east-1.amazonaws.com
+## ally.deviceKey=paste-device-key-here
