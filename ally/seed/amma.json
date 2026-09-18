@@ -1,0 +1,145 @@
+{
+  "parent_id": "amma",
+  "profile": {
+    "name": "Amma",
+    "full_name": "Kamala Sharma",
+    "language": "hi-IN",
+    "timezone": "Asia/Kolkata",
+    "city": "Bengaluru",
+    "baseline": {
+      "wake_window": [
+        "06:30",
+        "07:45"
+      ],
+      "typical_first_contact_time": "08:15",
+      "typical_call_duration_sec": 90,
+      "vocal_baseline": {
+        "avg_pause_ms": 450,
+        "avg_words_per_min": 105
+      }
+    },
+    "name_hi": "अम्मा"
+  },
+  "members": [
+    {
+      "id": "rahul",
+      "name": "Rahul",
+      "relation": "son",
+      "role": "child",
+      "order": 1,
+      "city": "Pune",
+      "name_hi": "राहुल"
+    },
+    {
+      "id": "priya",
+      "name": "Priya",
+      "relation": "daughter",
+      "role": "child",
+      "order": 2,
+      "city": "Bengaluru",
+      "name_hi": "प्रिया"
+    },
+    {
+      "id": "sunita",
+      "name": "Sunita aunty",
+      "relation": "neighbour",
+      "role": "neighbour",
+      "order": 3,
+      "city": "Bengaluru",
+      "name_hi": "सुनीता आंटी"
+    }
+  ],
+  "history_template": [
+    {
+      "wake": "06:52",
+      "checkin": "08:10",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Usual morning; tea on the balcony"
+    },
+    {
+      "wake": "06:47",
+      "checkin": "08:14",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "BP tablet after breakfast"
+    },
+    {
+      "wake": "07:11",
+      "checkin": "08:21",
+      "mood": "calm",
+      "reminders_done": 1,
+      "notes": "Slightly later wake"
+    },
+    {
+      "wake": "06:41",
+      "checkin": "08:05",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Walked to the temple"
+    },
+    {
+      "wake": "06:58",
+      "checkin": "08:12",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Asked Ally to tell Rahul she'd call later"
+    },
+    {
+      "wake": "07:24",
+      "checkin": "08:30",
+      "mood": "low",
+      "reminders_done": 1,
+      "notes": "Slow morning, still within her window"
+    },
+    {
+      "wake": "06:50",
+      "checkin": "08:09",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Sunday chai with Sunita aunty"
+    },
+    {
+      "wake": "06:45",
+      "checkin": "08:15",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Usual"
+    },
+    {
+      "wake": "06:57",
+      "checkin": "08:18",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Forgot the word for haldi, laughed it off"
+    },
+    {
+      "wake": "06:38",
+      "checkin": "08:02",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Early and cheerful"
+    },
+    {
+      "wake": "07:13",
+      "checkin": "08:24",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Slept a little longer"
+    },
+    {
+      "wake": "06:55",
+      "checkin": "08:13",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Reminded about evening tablet"
+    },
+    {
+      "wake": "07:00",
+      "checkin": "08:16",
+      "mood": "calm",
+      "reminders_done": 2,
+      "notes": "Baseline settled"
+    }
+  ]
+}
