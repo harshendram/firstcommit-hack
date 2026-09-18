@@ -1,0 +1,38 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.next/
+next-env.d.ts
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.iml
+.gradle/
+local.properties
+wear-os/.gradle/
+wear-os/**/build/
+backend/dist/
+backend/data/
+web/.next/
+web/out/
+
+# Ally
+.env.*
+!.env.example
+!.env.local.example
+**/.venv/
+**/__pycache__/
+.pytest_cache/
+infra/cdk.out/
+*.aar
+wear-os/.artifacts/
+# Sibling projects keep their own git history
+Project-Memoria_Dementia-Assistant/
+Project-Memoria_OPENAI_Build_WEEK/
+
+# stray secret files
+/env
+infra/cdk-outputs.json

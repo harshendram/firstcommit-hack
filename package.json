@@ -1,0 +1,11 @@
+{
+  "name": "rakshak",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "runthrough": "npm --prefix backend exec -- tsx scripts/runthrough.ts",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix web run typecheck"
+  }
+}
