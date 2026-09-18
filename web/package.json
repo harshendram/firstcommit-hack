@@ -1,0 +1,37 @@
+{
+  "name": "suraksha-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-amplify/ui-react": "^6.15.6",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "@react-three/rapier": "^2.2.0",
+    "aws-amplify": "^6.20.0",
+    "ecctrl": "^2.0.2",
+    "framer-motion": "^12.12.1",
+    "gsap": "^3.15.0",
+    "leva": "^0.10.1",
+    "next": "^15.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-pageflip": "^2.0.3",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "@types/three": "^0.186.0",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.8.3"
+  }
+}
