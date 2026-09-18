@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon Polly</title>
+  <rect x="0" y="0" width="80" height="80" fill="#8C4FFF"/>
+  <g fill="#FFFFFF">
+    <path d="M28 22c-6.6 0-12 5.4-12 12v12c0 6.6 5.4 12 12 12h2v6.5c0 .9 1.1 1.4 1.8.8L42 58h10c6.6 0 12-5.4 12-12V34c0-6.6-5.4-12-12-12H28zm0 6h24c3.3 0 6 2.7 6 6v12c0 3.3-2.7 6-6 6H40.5L34 58v-6H28c-3.3 0-6-2.7-6-6V34c0-3.3 2.7-6 6-6z"/>
+    <circle cx="34" cy="40" r="3"/>
+    <circle cx="46" cy="40" r="3"/>
+  </g>
+</svg>

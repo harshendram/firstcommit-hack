@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon Nova</title>
+  <rect x="0" y="0" width="80" height="80" fill="#232F3E"/>
+  <g fill="none" stroke="#FF9900" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40 16 L58 28 L58 52 L40 64 L22 52 L22 28 Z"/>
+    <path d="M40 28 L50 34 L50 46 L40 52 L30 46 L30 34 Z"/>
+  </g>
+  <circle cx="40" cy="40" r="5" fill="#FF9900"/>
+</svg>

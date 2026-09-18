@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon Transcribe</title>
+  <rect x="0" y="0" width="80" height="80" fill="#01A88D"/>
+  <g fill="#FFFFFF">
+    <rect x="18" y="36" width="6" height="18" rx="2"/>
+    <rect x="28" y="28" width="6" height="34" rx="2"/>
+    <rect x="38" y="22" width="6" height="46" rx="2"/>
+    <rect x="48" y="30" width="6" height="30" rx="2"/>
+    <rect x="58" y="38" width="6" height="14" rx="2"/>
+  </g>
+</svg>
