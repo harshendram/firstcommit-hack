@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+seed/mom_01.state.json
+.pytest_cache/
