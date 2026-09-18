@@ -1,0 +1,2616 @@
+@import "tailwindcss";
+
+/* Suraksha — warm, quiet, not clinical. Light mode only. */
+:root {
+  --paper: oklch(0.98 0.012 85);
+  --paper-deep: oklch(0.955 0.019 82);
+  --paper-sunk: oklch(0.93 0.024 80);
+  --card: oklch(1 0 0);
+
+  --ink: oklch(0.26 0.032 42);
+  --ink-soft: oklch(0.48 0.03 45);
+  --ink-faint: oklch(0.64 0.022 50);
+  --line: oklch(0.88 0.018 72);
+  --line-strong: oklch(0.8 0.025 70);
+
+  --alert: oklch(0.56 0.2 27);
+  --alert-bright: oklch(0.63 0.21 28);
+  --alert-wash: oklch(0.955 0.035 30);
+  --warn: oklch(0.7 0.15 66);
+  --warn-wash: oklch(0.96 0.05 80);
+  --ok: oklch(0.57 0.13 155);
+  --ok-wash: oklch(0.955 0.04 155);
+  --calm: oklch(0.53 0.13 245);
+  --calm-wash: oklch(0.955 0.03 245);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: var(--font-instrument), var(--font-devanagari), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-syne), var(--font-instrument), var(--font-devanagari), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-alert: var(--alert);
+  --color-alert-bright: var(--alert-bright);
+  --color-alert-wash: var(--alert-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-ok: var(--ok);
+  --color-ok-wash: var(--ok-wash);
+  --color-calm: var(--calm);
+  --color-calm-wash: var(--calm-wash);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* ——— Type primitives (housepot pattern) ——— */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-synthesis: none;
+  line-height: 0.98;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.tnum {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow-sm {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ——— Buttons ——— */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.3s var(--ease),
+    transform 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-primary:hover {
+  background: var(--alert);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+.btn-ghost:hover {
+  background: oklch(0.26 0.032 42 / 0.05);
+  transform: translateY(-1px);
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s var(--ease);
+}
+
+.btn-primary:hover svg {
+  transform: translateX(3px);
+}
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--alert);
+  color: oklch(0.99 0.01 60);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    filter 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ——— Surfaces ——— */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow:
+    0 1px 2px oklch(0.26 0.032 42 / 0.03),
+    0 12px 32px -20px oklch(0.26 0.032 42 / 0.14);
+}
+
+.panel-sunk {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-deep);
+}
+
+/* Paper grain + hairline grid — quieter than before */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, oklch(0.26 0.032 42 / 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.26 0.032 42 / 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 40%, black, transparent 72%);
+}
+
+.dot-bg {
+  background-image: radial-gradient(
+    oklch(0.26 0.032 42 / 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* ——— Live pulse (status dots) ——— */
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  animation: ring 1.8s ease-out infinite;
+}
+
+@keyframes ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* ——— Transcript scroll ——— */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   Landing — housepot / Benzo-inspired hero + seal card
+   ========================================================= */
+
+
+/* =========================================================
+   Galaxy Watch Classic mockup � ported from housepot
+   ========================================================= */
+
+.ws-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    oklch(0.56 0.18 28 / 0.18) 0%,
+    oklch(0.4 0.08 28 / 0.06) 42%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ws-ring {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 1px solid oklch(0.56 0.18 28 / 0.16);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.watch {
+  position: relative;
+  width: 280px;
+  height: 340px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 28px 50px oklch(0.26 0.03 42 / 0.35));
+}
+
+.watch-band {
+  position: absolute;
+  left: 50%;
+  width: 74px;
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.watch-band-top {
+  top: 0;
+  height: 78px;
+}
+
+.watch-band-bot {
+  bottom: 0;
+  height: 78px;
+}
+
+.watch-band-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    oklch(0.12 0.02 42) 0%,
+    oklch(0.24 0.025 42) 22%,
+    oklch(0.3 0.022 42) 50%,
+    oklch(0.24 0.025 42) 78%,
+    oklch(0.12 0.02 42) 100%
+  );
+  box-shadow:
+    inset 2px 0 0 oklch(1 0 0 / 0.05),
+    inset -2px 0 0 oklch(0 0 0 / 0.28);
+}
+
+.watch-band-top .watch-band-face {
+  border-radius: 10px 10px 3px 3px;
+}
+
+.watch-band-bot .watch-band-face {
+  border-radius: 3px 3px 10px 10px;
+}
+
+.watch-band-hole {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: oklch(0.1 0.02 42);
+  box-shadow:
+    inset 0 1px 2px oklch(0 0 0 / 0.75),
+    0 0 0 1px oklch(1 0 0 / 0.05);
+}
+
+.watch-body {
+  position: relative;
+  width: 248px;
+  height: 248px;
+  z-index: 2;
+}
+
+.watch-case {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 210deg,
+    oklch(0.58 0.015 85) 0deg,
+    oklch(0.34 0.015 42) 55deg,
+    oklch(0.64 0.018 90) 110deg,
+    oklch(0.3 0.018 42) 180deg,
+    oklch(0.52 0.015 85) 240deg,
+    oklch(0.32 0.016 42) 300deg,
+    oklch(0.58 0.015 85) 360deg
+  );
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 0.45),
+    inset 0 1px 0 oklch(1 0 0 / 0.38),
+    inset 0 -2px 4px oklch(0 0 0 / 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.watch-case-shine {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, oklch(1 0 0 / 0.24), transparent 42%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.watch-bezel {
+  position: relative;
+  width: 92%;
+  height: 92%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, oklch(0.2 0.018 42) 62%, oklch(0.14 0.018 42) 63%),
+    linear-gradient(145deg, oklch(0.4 0.015 42), oklch(0.18 0.018 42));
+  box-shadow:
+    inset 0 0 0 1px oklch(1 0 0 / 0.08),
+    inset 0 0 18px oklch(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.watch-bezel-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.watch-glass {
+  position: relative;
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(145deg, oklch(0.48 0.012 42), oklch(0.1 0.02 42));
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 0.55),
+    inset 0 0 0 1px oklch(1 0 0 / 0.1);
+}
+
+.watch-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 19px 14px 15px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, oklch(0.3 0.08 28 / 0.28), transparent 55%),
+    #0a0c10;
+  color: oklch(0.96 0.01 90);
+  transition: background 0.55s var(--ease);
+}
+
+.watch-screen.is-armed {
+  background:
+    radial-gradient(circle at 50% 20%, oklch(0.4 0.16 28 / 0.45), transparent 55%),
+    #140808;
+}
+
+.watch-glass-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    oklch(1 0 0 / 0.14) 0%,
+    transparent 28%,
+    transparent 72%,
+    oklch(1 0 0 / 0.04) 100%
+  );
+  pointer-events: none;
+  z-index: 4;
+}
+
+.wf-top,
+.wf-mid,
+.wf-bot {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wf-brand {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: oklch(0.72 0.16 28);
+}
+
+.wf-brand.is-warn {
+  color: oklch(0.82 0.14 28);
+}
+
+.wf-time {
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: oklch(0.96 0.01 90);
+}
+
+.wf-colon {
+  opacity: 0.45;
+  animation: colon-blink 1s steps(1) infinite;
+}
+
+@keyframes colon-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.wf-sec {
+  margin-top: 1px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: oklch(0.55 0.02 42);
+}
+
+.wf-mid {
+  gap: 7px;
+  flex: 1;
+  justify-content: center;
+}
+
+.wf-buzz {
+  color: oklch(0.84 0.12 70);
+  font: 800 7px/1 var(--font-mono);
+  letter-spacing: 0.18em;
+  animation: buzz-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes buzz-pulse {
+  50% {
+    opacity: 0.45;
+    transform: translateX(1px);
+  }
+}
+
+.wf-stat-l {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: oklch(0.55 0.02 42);
+  font-weight: 700;
+}
+
+.btn-sos {
+  width: 64px;
+  height: 64px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(180deg, oklch(0.62 0.2 28), oklch(0.48 0.18 28));
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow:
+    0 6px 16px oklch(0.56 0.2 28 / 0.4),
+    inset 0 1px 0 oklch(1 0 0 / 0.28);
+  transition: transform 0.2s var(--ease), filter 0.2s;
+}
+
+.btn-sos:hover {
+  filter: brightness(1.08);
+  transform: scale(1.04);
+}
+
+.btn-sos:active {
+  transform: scale(0.96);
+}
+
+.wf-mid.is-warn {
+  gap: 6px;
+}
+
+.wf-warn-icon {
+  color: oklch(0.82 0.14 28);
+}
+
+.wf-warn-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.9 0.08 28);
+}
+
+.wf-warn-sub {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: oklch(0.68 0.06 28);
+  letter-spacing: 0.04em;
+}
+
+.btn-reset {
+  margin-top: 4px;
+  padding: 6px 12px;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: 999px;
+  background: oklch(1 0 0 / 0.06);
+  color: oklch(0.88 0.04 28);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.wf-bot {
+  flex-direction: row;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: oklch(0.5 0.02 42);
+  font-weight: 600;
+}
+
+.wf-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: oklch(0.66 0.14 155);
+  box-shadow: 0 0 0 3px oklch(0.66 0.14 155 / 0.18);
+}
+
+.wf-dot.is-warn {
+  background: oklch(0.72 0.18 28);
+  box-shadow: 0 0 0 3px oklch(0.72 0.18 28 / 0.2);
+  /* No pulse here — the countdown ring is the only thing that moves. */
+}
+
+.watch-crown {
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  transform: translateY(-30%);
+  width: 14px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 3px 7px 7px 3px;
+  background: repeating-linear-gradient(
+    180deg,
+    oklch(0.62 0.015 85) 0 2px,
+    oklch(0.4 0.015 42) 2px 3px
+  );
+  box-shadow:
+    2px 0 6px oklch(0 0 0 / 0.4),
+    inset 0 1px 0 oklch(1 0 0 / 0.3),
+    inset -1px 0 0 oklch(0 0 0 / 0.28);
+  z-index: 5;
+  cursor: pointer;
+}
+
+.watch-crown-knurl {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    oklch(0 0 0 / 0.25),
+    transparent 40%,
+    oklch(1 0 0 / 0.15)
+  );
+}
+
+.watch-key {
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  transform: translateY(-120%);
+  width: 8px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(90deg, oklch(0.36 0.015 42), oklch(0.58 0.015 85));
+  box-shadow:
+    1px 0 4px oklch(0 0 0 / 0.35),
+    inset 0 1px 0 oklch(1 0 0 / 0.25);
+  z-index: 5;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .watch {
+    transform: scale(0.88);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-colon,
+  .wf-buzz {
+    animation: none;
+  }
+}
+
+
+/* ===================================================================
+   Scroll experience — the sticky stage the Spline watch lives in.
+   Mechanism borrowed from Incridea's Explore levels: scroll position
+   drives the scene, one AWS service revealed per level.
+   =================================================================== */
+
+.stage-track {
+  position: relative;
+  /* One viewport per level, plus a lead-in and a resolve. */
+  height: 600svh;
+}
+
+.stage-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.stage-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Spline paints its own transparent canvas; this sits behind it. */
+.stage-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 50% 45%,
+      oklch(0.72 0.08 85 / 0.18),
+      transparent 70%
+    ),
+    var(--paper);
+}
+
+.stage-copy {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 1180px);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 5vw, 64px);
+  pointer-events: none;
+}
+
+/* Level caption card — one per AWS service. */
+.level-card {
+  max-width: 34rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: oklch(1 0 0 / 0.82);
+  backdrop-filter: blur(14px);
+  padding: clamp(20px, 3vw, 30px);
+  box-shadow:
+    0 1px 2px oklch(0.26 0.032 42 / 0.04),
+    0 24px 60px -32px oklch(0.26 0.032 42 / 0.28);
+  will-change: opacity, transform;
+}
+
+.level-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--paper-deep);
+  flex-shrink: 0;
+}
+
+/* AWS icons are CC-BY-ND: shown unmodified, never recoloured. */
+.level-icon img {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.level-head {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  color: var(--ink);
+}
+
+.level-body {
+  margin-top: 0.85rem;
+  max-width: 42ch;
+  font-size: 1rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+
+/* Thin progress rail down the left edge of the stage. */
+.rail {
+  position: absolute;
+  left: clamp(12px, 2.4vw, 34px);
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.rail-tick {
+  width: 2px;
+  height: 26px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  opacity: 0.45;
+  transition:
+    background 0.45s var(--ease),
+    opacity 0.45s var(--ease),
+    height 0.45s var(--ease);
+}
+
+.rail-tick[data-on="true"] {
+  background: var(--alert);
+  opacity: 1;
+  height: 40px;
+}
+
+.scene-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* No WebGL, no motion, no bandwidth: the CSS watch carries the scene. */
+@media (prefers-reduced-motion: reduce) {
+  .stage-track {
+    height: auto;
+  }
+  .stage-pin {
+    position: relative;
+    height: auto;
+    padding-block: clamp(48px, 10vh, 96px);
+  }
+  .level-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ——— Explore world HUD + modals (parchment / stone vibe) ——— */
+
+.world-top-actions {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.world-main-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.78 0.03 75 / 0.85);
+  background: oklch(0.97 0.015 85 / 0.82);
+  backdrop-filter: blur(10px);
+  color: oklch(0.28 0.03 45);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 8px 28px -16px oklch(0.2 0.03 45 / 0.55);
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.world-main-link:hover {
+  background: oklch(1 0 0 / 0.95);
+  transform: translateY(-1px);
+}
+
+/* An icon, not a word: every other control in the world is one. The state it
+   reports lives in `aria-label` and `title`, so nothing is lost by dropping
+   the text. */
+.world-sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid oklch(0.78 0.03 75 / 0.85);
+  background: oklch(0.97 0.015 85 / 0.82);
+  backdrop-filter: blur(10px);
+  color: oklch(0.28 0.03 45);
+  cursor: pointer;
+  box-shadow: 0 8px 28px -16px oklch(0.2 0.03 45 / 0.55);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+.world-sound-toggle:hover {
+  background: oklch(1 0 0 / 0.95);
+  transform: translateY(-1px);
+}
+
+/* Stumble sits with Run and Jump now — it is an action she performs, not a
+   piece of navigation. Still alert-washed: it is the one control in the world
+   that makes something happen. */
+.world-fall-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.5rem 0.6rem 0.42rem;
+  border-radius: 1rem;
+  border: 1px solid oklch(0.62 0.16 30 / 0.5);
+  background: oklch(0.95 0.045 32 / 0.85);
+  backdrop-filter: blur(10px);
+  color: oklch(0.45 0.18 28);
+  cursor: pointer;
+  box-shadow: 0 8px 28px -16px oklch(0.4 0.14 28 / 0.6);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+.world-fall-btn:hover {
+  background: oklch(0.93 0.06 32 / 0.96);
+  transform: translateY(-1px);
+}
+.world-fall-btn:active {
+  transform: translateY(0);
+}
+.world-fall-cap {
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.world-modal-root {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  pointer-events: auto;
+}
+
+.world-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: oklch(0.18 0.02 45 / 0.42);
+  cursor: pointer;
+}
+
+.world-modal {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 28rem);
+  max-height: min(84svh, 40rem);
+  overflow: auto;
+  border-radius: 22px;
+  border: 1px solid oklch(0.82 0.03 75 / 0.95);
+  background:
+    linear-gradient(165deg, oklch(0.99 0.01 85 / 0.97), oklch(0.94 0.025 78 / 0.95));
+  backdrop-filter: blur(18px);
+  padding: 0 1.45rem 1.5rem;
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.65) inset,
+    0 30px 70px -28px oklch(0.15 0.03 45 / 0.6);
+  color: oklch(0.28 0.03 45);
+}
+
+.world-modal-sheen {
+  pointer-events: none;
+  position: absolute;
+  inset: 0 0 auto;
+  height: 7rem;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(
+    180deg,
+    oklch(1 0.02 85 / 0.55),
+    transparent
+  );
+}
+
+.world-modal-hero {
+  position: relative;
+  z-index: 1;
+  margin: 1.15rem -0.35rem 0.85rem;
+  height: 5.5rem;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid oklch(0.86 0.02 75 / 0.8);
+}
+.world-modal-hero.portal {
+  background:
+    radial-gradient(circle at 50% 60%, oklch(0.75 0.12 180 / 0.55), transparent 55%),
+    linear-gradient(135deg, #1a3a3a, #0f2428);
+}
+.world-modal-hero.docs {
+  background:
+    linear-gradient(135deg, oklch(0.96 0.02 85), oklch(0.9 0.04 70));
+}
+.world-modal-hero.team {
+  background:
+    linear-gradient(135deg, oklch(0.93 0.03 50), oklch(0.88 0.04 40));
+}
+.world-modal-hero-mark {
+  color: oklch(0.85 0.1 180);
+  font-size: 2.4rem;
+  text-shadow: 0 0 24px oklch(0.7 0.12 180 / 0.8);
+}
+.world-modal-hero-icons,
+.world-modal-hero-avatars {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+.world-modal-hero-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 12px;
+  background: oklch(1 0 0 / 0.85);
+  border: 1px solid oklch(0.84 0.02 75);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 18px -12px oklch(0.3 0.03 45 / 0.5);
+}
+.world-modal-hero-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 2px solid oklch(1 0 0 / 0.7);
+  box-shadow: 0 8px 18px -10px oklch(0.2 0.03 45 / 0.55);
+}
+
+.world-modal-x {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 2;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.82 0.02 75);
+  background: oklch(0.98 0.01 85 / 0.9);
+  color: oklch(0.45 0.02 45);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.world-modal-eyebrow {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: oklch(0.52 0.1 32);
+}
+
+.world-modal-title {
+  position: relative;
+  z-index: 1;
+  margin: 0.45rem 0 0;
+  /* Carved Roman capitals — the world's voice. Body copy stays sans. */
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 3.4vw, 1.68rem);
+  letter-spacing: 0.005em;
+  line-height: 1.18;
+}
+
+.world-modal-copy {
+  position: relative;
+  z-index: 1;
+  margin: 0.7rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: oklch(0.42 0.025 45);
+}
+
+.world-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.25rem;
+}
+
+.world-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), background 0.15s var(--ease);
+}
+.world-btn:hover {
+  transform: translateY(-1px);
+}
+.world-btn-primary {
+  background: oklch(0.3 0.04 45);
+  color: oklch(0.97 0.01 85);
+}
+.world-btn-ghost {
+  background: transparent;
+  border-color: oklch(0.8 0.025 75);
+  color: oklch(0.35 0.03 45);
+}
+
+.world-doc-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+.world-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.84 0.02 75);
+  background: oklch(1 0 0 / 0.7);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: oklch(0.35 0.03 45);
+}
+.world-doc-chip-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: oklch(0.96 0.015 85);
+}
+
+.world-pillar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+.world-pillar-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  border: 1.5px solid;
+  background: oklch(1 0 0 / 0.55);
+  color: oklch(0.35 0.03 45);
+}
+
+.world-doc-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.world-doc-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid oklch(0.88 0.02 75);
+}
+.world-doc-list strong {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+.world-doc-list span {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: oklch(0.45 0.025 45);
+}
+
+.world-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+  margin-top: 1.15rem;
+}
+.world-team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  padding: 0.95rem 0.5rem;
+  border-radius: 16px;
+  border: 1px solid oklch(0.86 0.02 75);
+  background:
+    linear-gradient(160deg, oklch(1 0 0 / 0.75), oklch(0.97 0.015 85 / 0.65));
+  box-shadow: 0 10px 24px -20px oklch(0.25 0.03 45 / 0.55);
+}
+/* A disc with a beast on it, not initials — see `Crest.tsx`. The inset ring
+   is the rim of a seal: it keeps the silhouette from touching the edge. */
+.world-team-avatar {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow:
+    0 6px 14px -8px oklch(0.2 0.03 45 / 0.6),
+    inset 0 0 0 1px oklch(1 0 0 / 0.18);
+}
+.world-team-avatar svg {
+  width: 2.15rem;
+  height: 2.15rem;
+}
+.world-team-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
+
+/* Crest on the cottage hero strip, in place of a row of tiny avatars. */
+.world-team-crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+.world-team-crest-mark {
+  font-size: 1.15rem;
+  color: oklch(0.52 0.12 40);
+}
+.world-team-crest-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: oklch(0.32 0.05 42);
+}
+
+.world-team-footer {
+  margin: 1.15rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid oklch(0.88 0.02 75);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: oklch(0.48 0.025 45);
+}
+
+@media (max-width: 520px) {
+  .world-team-grid {
+    grid-template-columns: 1fr;
+  }
+  .world-team-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 0.7rem;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Opening story — the wardstone's first beat, after the spawn drop.
+ * ------------------------------------------------------------------ */
+
+.world-modal-hero.story {
+  background:
+    radial-gradient(circle at 50% 62%, oklch(0.62 0.13 195 / 0.5), transparent 58%),
+    linear-gradient(140deg, #22333a, #121d22);
+}
+.story-stone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 34% 66% 58% 42% / 52% 40% 60% 48%;
+  background: linear-gradient(150deg, oklch(0.42 0.02 200), oklch(0.24 0.02 220));
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.18);
+}
+.story-stone-core {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: oklch(0.82 0.15 190);
+  box-shadow: 0 0 18px 4px oklch(0.75 0.15 190 / 0.6);
+  animation: wardstone-breathe 2.8s ease-in-out infinite;
+}
+@keyframes wardstone-breathe {
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
+  }
+}
+
+.story-hint {
+  margin: 1.1rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: oklch(0.5 0.025 45);
+}
+
+.story-optout {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.95rem;
+  font-size: 0.75rem;
+  color: oklch(0.52 0.02 45);
+  cursor: pointer;
+  user-select: none;
+}
+.story-optout input {
+  width: 0.9rem;
+  height: 0.9rem;
+  accent-color: oklch(0.42 0.06 42);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ *
+ * Wardstone overlay — the fall sequence and the calls behind it.
+ * ------------------------------------------------------------------ */
+
+.wardstone-root {
+  position: absolute;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.wardstone-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* minmax(0, …) + min-height:0 below: without them a grid item's automatic
+     minimum size is its content, the row refuses to shrink, and the panel
+     overflows its own max-height — which is what made the watch drift down
+     while the steps scrolled up. */
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 1.5rem;
+  width: min(100%, 58rem);
+  max-height: min(86svh, 42rem);
+  padding: 1.5rem;
+  border-radius: 24px;
+  border: 1px solid oklch(0.82 0.03 75 / 0.95);
+  background: linear-gradient(
+    165deg,
+    oklch(0.99 0.01 85 / 0.97),
+    oklch(0.94 0.025 78 / 0.95)
+  );
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.65) inset,
+    0 30px 70px -28px oklch(0.15 0.03 45 / 0.6);
+  color: oklch(0.28 0.03 45);
+  overflow: hidden;
+}
+
+.wardstone-watch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 18rem;
+  min-width: 0;
+  /* Stays put while the rail moves — the watch is the fixed reference point. */
+  align-self: start;
+  position: sticky;
+  top: 0;
+}
+.wardstone-watch .watch {
+  filter: drop-shadow(0 20px 38px oklch(0.26 0.03 42 / 0.3));
+}
+.wardstone-honesty {
+  margin: 0;
+  max-width: 17rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: oklch(0.58 0.02 45);
+}
+
+.wardstone-rail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* The fix: lets the grid row shrink so this is the ONLY thing that scrolls. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+}
+.wardstone-title {
+  margin: 0.35rem 0 0.2rem;
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-weight: 700;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.wardstone-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wardstone-step {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid oklch(0.87 0.02 75);
+  background: linear-gradient(
+    160deg,
+    oklch(1 0 0 / 0.78),
+    oklch(0.97 0.015 85 / 0.62)
+  );
+}
+.wardstone-step.is-skipped {
+  opacity: 0.55;
+  border-style: dashed;
+  background: transparent;
+}
+.wardstone-step-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 10px;
+  background: oklch(1 0 0 / 0.9);
+  border: 1px solid oklch(0.86 0.02 75);
+}
+.wardstone-step-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: oklch(0.55 0.08 42);
+}
+.wardstone-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.wardstone-step-service {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.5 0.1 32);
+}
+.wardstone-step-call {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: oklch(0.34 0.03 45);
+  word-break: break-word;
+}
+.wardstone-step-note {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: oklch(0.44 0.025 45);
+}
+.wardstone-step-source {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: oklch(0.62 0.02 45);
+}
+
+.wardstone-end {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid oklch(0.88 0.02 75);
+}
+.wardstone-chip {
+  display: inline-block;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.72 0.1 155 / 0.6);
+  background: oklch(0.95 0.04 155);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: oklch(0.42 0.11 155);
+}
+.wardstone-chip.is-alert {
+  border-color: oklch(0.7 0.16 28 / 0.55);
+  background: oklch(0.95 0.045 30);
+  color: oklch(0.48 0.18 28);
+}
+.wardstone-end-line {
+  margin: 0.6rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: oklch(0.36 0.03 45);
+}
+.wardstone-end-quote {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: oklch(0.32 0.04 45);
+}
+.wardstone-end-kicker {
+  margin: 0.7rem 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: oklch(0.52 0.025 45);
+}
+.wardstone-waiting {
+  margin: 0.8rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.6 0.02 45);
+}
+
+@media (max-width: 760px) {
+  /* One column: now the PANEL is the single scroller and the rail is not. */
+  .wardstone-panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.9rem;
+    padding: 1.1rem;
+    overflow-y: auto;
+  }
+  .wardstone-watch {
+    position: static;
+    width: auto;
+  }
+  .wardstone-watch .watch {
+    transform: scale(0.78);
+    margin: -2rem 0;
+  }
+  .wardstone-rail {
+    overflow: visible;
+    min-height: auto;
+  }
+}
+
+/* Decorative crown / key when the case is not interactive. */
+span.watch-crown,
+span.watch-key {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------ *
+ * Comic balloon over the character — Suraksha speaking in-world.
+ * Ink outline on purpose: a device talking, not a parchment page.
+ * ------------------------------------------------------------------ */
+
+.toon-bubble {
+  position: relative;
+  min-width: 8rem;
+  max-width: 15rem;
+  padding: 0.7rem 0.95rem;
+  border: 3px solid #14110d;
+  border-radius: 18px;
+  background: #fffdf6;
+  color: #14110d;
+  text-align: center;
+  box-shadow: 3px 4px 0 0 #14110d;
+}
+.toon-bubble-line {
+  margin: 0;
+  font-family: var(--font-devanagari), var(--font-sans), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.toon-bubble-sub {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: #5d5346;
+}
+.toon-caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.85em;
+  margin-left: 2px;
+  vertical-align: -0.1em;
+  background: #14110d;
+  animation: toon-caret 0.9s steps(2) infinite;
+}
+@keyframes toon-caret {
+  50% {
+    opacity: 0;
+  }
+}
+/* Tail: an outlined triangle, drawn as two stacked wedges. */
+.toon-bubble-tail {
+  position: absolute;
+  left: 50%;
+  bottom: -15px;
+  width: 0;
+  height: 0;
+  margin-left: -11px;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 15px solid #14110d;
+}
+.toon-bubble-tail::after {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: -15px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid #fffdf6;
+}
+
+/* ------------------------------------------------------------------ *
+ * Medieval frame — shared by every modal in the world, so the product
+ * panels read as pages from this place rather than a web app dropped
+ * on top of it.
+ * ------------------------------------------------------------------ */
+
+/* Rule under a title: ✧ ──────── ✧ */
+.world-rule {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0.15rem;
+  color: oklch(0.62 0.07 42);
+}
+.world-rule::before,
+.world-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0.7 0.05 45 / 0.85),
+    transparent
+  );
+}
+.world-rule-mark {
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  line-height: 1;
+}
+
+/* Filigree at the card corners — drawn, not an image. */
+.world-corner {
+  pointer-events: none;
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: oklch(0.66 0.07 45 / 0.75);
+  border-style: solid;
+  border-width: 0;
+  z-index: 2;
+}
+.world-corner-tl {
+  top: 0.55rem;
+  left: 0.55rem;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-top-left-radius: 8px;
+}
+.world-corner-tr {
+  top: 0.55rem;
+  right: 0.55rem;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-top-right-radius: 8px;
+}
+.world-corner-bl {
+  bottom: 0.55rem;
+  left: 0.55rem;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  border-bottom-left-radius: 8px;
+}
+.world-corner-br {
+  bottom: 0.55rem;
+  right: 0.55rem;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Parchment grain + a warmer, rougher edge on every card. */
+.world-modal,
+.wardstone-panel {
+  border-color: oklch(0.72 0.05 62 / 0.95);
+  background-image:
+    radial-gradient(
+      circle at 18% 12%,
+      oklch(0.86 0.045 70 / 0.35),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 84% 78%,
+      oklch(0.84 0.05 55 / 0.32),
+      transparent 46%
+    ),
+    linear-gradient(165deg, oklch(0.99 0.012 85 / 0.97), oklch(0.93 0.03 76 / 0.96));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.65) inset,
+    0 0 0 1px oklch(0.55 0.05 50 / 0.18) inset,
+    0 30px 70px -28px oklch(0.15 0.03 45 / 0.6);
+}
+
+/* Wax seal on the primary action. */
+.world-btn-primary {
+  position: relative;
+  background: linear-gradient(170deg, oklch(0.37 0.05 42), oklch(0.27 0.04 40));
+  border-color: oklch(0.24 0.03 40);
+  font-family: var(--font-carved), var(--font-display), serif;
+  letter-spacing: 0.1em;
+}
+.world-btn-ghost {
+  font-family: var(--font-carved), var(--font-display), serif;
+  letter-spacing: 0.1em;
+}
+
+/* ---- watch faces used only by the wardstone sequence ---- */
+
+.wf-ring {
+  position: absolute;
+  inset: 5px;
+  z-index: 1;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.wf-ring-track,
+.wf-ring-fill {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.wf-ring-track {
+  stroke: oklch(1 0 0 / 0.1);
+}
+.wf-ring-fill {
+  stroke: oklch(0.72 0.18 28);
+  stroke-dasharray: 119.4;
+  transition: stroke-dashoffset 0.12s linear;
+}
+
+/* Step readout — Roman numerals, matching the museum's four gallery headings. */
+.wf-step {
+  font-family: var(--font-mono);
+  font-size: 6.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(0.6 0.03 45);
+}
+.wf-pips {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 1px;
+}
+.wf-pip {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: oklch(1 0 0 / 0.16);
+  transition: background 0.3s var(--ease);
+}
+.wf-pip.is-done {
+  background: oklch(0.72 0.14 40);
+}
+.wf-pip.is-now {
+  background: oklch(0.86 0.16 70);
+  box-shadow: 0 0 0 2px oklch(0.86 0.16 70 / 0.2);
+}
+
+.wf-headline {
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: oklch(0.95 0.015 90);
+  padding: 0 10px;
+  /* Never let a long line push the buttons off the round screen. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wf-sub {
+  font-family: var(--font-mono);
+  font-size: 6.8px;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(0.62 0.04 42);
+  padding: 0 10px;
+}
+.wf-choices {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+.btn-sos.wf-choice-ok {
+  width: auto;
+  height: auto;
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wf-choices .btn-reset {
+  margin-top: 0;
+}
+.wf-ok-mark {
+  font-size: 22px;
+  line-height: 1;
+  color: oklch(0.78 0.16 155);
+  text-shadow: 0 0 16px oklch(0.7 0.16 155 / 0.6);
+}
+
+/* ------------------------------------------------------------------ *
+ * Standing-stone lore panels.
+ * ------------------------------------------------------------------ */
+
+.world-modal-hero.lore {
+  background:
+    radial-gradient(circle at 50% 62%, oklch(0.68 0.13 225 / 0.55), transparent 58%),
+    linear-gradient(140deg, #1d2a33, #101a20);
+}
+.lore-crystal {
+  width: 1.5rem;
+  height: 3rem;
+  background: linear-gradient(180deg, oklch(0.9 0.11 215), oklch(0.62 0.15 235));
+  clip-path: polygon(50% 0%, 100% 28%, 82% 100%, 18% 100%, 0% 28%);
+  box-shadow: 0 0 26px 6px oklch(0.72 0.15 225 / 0.55);
+  animation: lore-pulse 3s ease-in-out infinite;
+}
+@keyframes lore-pulse {
+  50% {
+    opacity: 0.72;
+    transform: translateY(2px) scale(0.97);
+  }
+}
+
+.lore-lead {
+  font-size: 1rem;
+  color: oklch(0.36 0.03 45);
+}
+
+.lore-points {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.lore-points li {
+  position: relative;
+  padding-left: 1.05rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: oklch(0.44 0.025 45);
+}
+.lore-points li::before {
+  content: "✧";
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  color: oklch(0.63 0.08 42);
+  font-size: 0.7rem;
+}
+
+/* Figures: published and assumed are told apart on sight, on purpose. */
+.lore-figures {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.lore-figures th,
+.lore-figures td {
+  text-align: left;
+  padding: 0.45rem 0.2rem;
+  border-bottom: 1px solid oklch(0.88 0.02 75);
+  vertical-align: top;
+}
+.lore-figures th {
+  font-weight: 500;
+  color: oklch(0.5 0.02 45);
+}
+.lore-figures td {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: oklch(0.32 0.03 45);
+  white-space: nowrap;
+  text-align: right;
+}
+.lore-tag {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lore-figures tr.is-published .lore-tag {
+  color: oklch(0.52 0.12 155);
+}
+.lore-figures tr.is-assumption td {
+  color: oklch(0.46 0.1 60);
+}
+.lore-figures tr.is-assumption .lore-tag {
+  color: oklch(0.58 0.12 62);
+}
+.lore-figures tr.is-price td {
+  color: oklch(0.36 0.05 42);
+}
+
+.lore-close {
+  margin: 1.1rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid oklch(0.88 0.02 75);
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  color: oklch(0.34 0.04 42);
+}
+
+/* ------------------------------------------------------------------ *
+ * The tome — a react-pageflip book, the way Incridea's was.
+ * ------------------------------------------------------------------ */
+
+.book-root {
+  position: absolute;
+  inset: 0;
+  z-index: 78;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+/* The stage is the whole block — one leaf wide in portrait, two in a spread.
+   Nothing is drawn on it directly: a lone hard cover occupies only half the
+   block, and a shadow on the stage would then fall across half a page of
+   nothing. `.book-slab` carries the shadow and the cut edges instead, and
+   moves to whichever half the paper is on. */
+.book-stage {
+  position: relative;
+  z-index: 1;
+  width: var(--book-w);
+}
+
+.book-slab {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  box-shadow: 0 30px 55px -26px oklch(0.15 0.03 45 / 0.8);
+}
+/* A lone front cover sits on the right of the block; the back cover on the left.
+   Snapped, never transitioned: animating `left`/`right` slid the cut edge
+   across the open book as a pale travelling bar. The swap happens while a page
+   is in the air (`is-flipping` widens the slab to the full block), so there is
+   nothing to see it happen against. */
+.book-stage.is-front .book-slab {
+  left: 50%;
+}
+.book-stage.is-back .book-slab {
+  right: 50%;
+}
+
+/* The cut edges of the paper. A book is a stack seen end-on; without these a
+   spread still reads as two loose sheets.
+
+   Warm and fairly dark on purpose — at 0.93 lightness they read as a white
+   border stuck to the leather rather than as paper. */
+.book-slab::before,
+.book-slab::after {
+  content: "";
+  position: absolute;
+  top: 1.5%;
+  bottom: 1.5%;
+  width: 5px;
+  border-radius: 2px;
+  opacity: 1;
+  transition: opacity 0.22s ease;
+  background: repeating-linear-gradient(
+    to right,
+    oklch(0.84 0.035 82) 0 1px,
+    oklch(0.7 0.045 78) 1px 2px
+  );
+}
+.book-slab::before {
+  left: -4px;
+}
+.book-slab::after {
+  right: -4px;
+}
+
+/* No paper edge beside a closed cover: a board covers the block, and a strip
+   of page standing proud of the leather is exactly the artefact this is here
+   to avoid. Faded rather than switched, so re-appearing is not a pop. */
+.book-stage.is-front .book-slab::before,
+.book-stage.is-front .book-slab::after,
+.book-stage.is-back .book-slab::before,
+.book-stage.is-back .book-slab::after,
+.book-stage.is-flipping .book-slab::before,
+.book-stage.is-flipping .book-slab::after {
+  opacity: 0;
+}
+
+/* The gutter. page-flip tags each leaf `--left` or `--right` and the WRAPPER
+   (not the parent) `--landscape` / `--portrait`, and it keeps those in step
+   while a page turns, so shading the inner edge here follows the fold for
+   free. Only in a spread — a single portrait leaf has no gutter. */
+.stf__wrapper.--landscape .stf__item.--left .book-page {
+  box-shadow: inset -18px 0 26px -18px oklch(0.25 0.04 45 / 0.75);
+}
+.stf__wrapper.--landscape .stf__item.--right .book-page {
+  box-shadow: inset 18px 0 26px -18px oklch(0.25 0.04 45 / 0.75);
+}
+
+.book-close {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  z-index: 3;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.6 0.05 50);
+  background: oklch(0.96 0.02 85);
+  color: oklch(0.35 0.04 45);
+  cursor: pointer;
+  font-size: 0.8rem;
+  box-shadow: 0 8px 20px -10px oklch(0.15 0.03 45 / 0.7);
+}
+
+/* The two textures are set here, not as inline styles: react-pageflip takes
+   these children into its own DOM, and a class survives that reliably.
+   width/height 100% is required — StPageFlip sizes its own wrappers, and
+   without this the page div collapses and the texture never paints. */
+.book-page {
+  width: 100%;
+  height: 100%;
+  background-image: url("/world/pageTexture.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #efe2c4;
+  overflow: hidden;
+}
+.book-page.is-cover {
+  display: grid;
+  place-items: center;
+  background-image: url("/world/bookCoverTexture.jpg");
+  background-color: #2b1d10;
+}
+/* ------------------------------------------------------------------ *
+ * page-flip's own stylesheet, inlined.
+ *
+ * The package ships `page-flip/src/Style/stPageFlip.css` and react-pageflip
+ * NEVER imports it — nothing in node_modules or this app references it. The
+ * library only writes `position` inline in simpleDraw(); draw()/drawSoft()
+ * rely on `.stf__item { position: absolute }` coming from this file. Without
+ * it the soft (inner) pages fall into normal flow and never paint, while the
+ * hard pages — the two covers, because showCover is true — happen to survive.
+ * That is exactly "the cover has texture but the pages don't".
+ *
+ * Inlined rather than imported so it cannot vanish on a package update.
+ * ------------------------------------------------------------------ */
+
+.stf__parent {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  transform: translateZ(0);
+  -ms-touch-action: pan-y;
+  touch-action: pan-y;
+}
+.sft__wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+.stf__parent canvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+.stf__block {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  perspective: 2000px;
+}
+.stf__item {
+  display: none;
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.stf__outerShadow,
+.stf__innerShadow,
+.stf__hardShadow,
+.stf__hardInnerShadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.book-cover-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.2rem;
+  text-align: center;
+  color: #f7e9cb;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
+}
+.book-cover-eyebrow,
+.book-cover-foot {
+  font-family: var(--font-carved), serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.book-cover-title {
+  margin: 0;
+  font-family: var(--font-carved), serif;
+  font-weight: 700;
+  font-size: 1.18rem;
+  line-height: 1.25;
+}
+
+/* The page itself. EB Garamond throughout the running text — old-style enough
+   to belong in a book on a table in this village, and cut for reading, which
+   Cinzel (carved capitals) is not. Cinzel stays for the heading and the folio. */
+.book-leaf {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.25rem 1.2rem 0.95rem;
+  color: #3a2f1e;
+  font-family: var(--font-grimoire), Georgia, serif;
+}
+.book-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.book-numeral {
+  font-family: var(--font-carved), serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.3em;
+  color: #8a6b3f;
+}
+.book-title {
+  margin: 0;
+  font-family: var(--font-carved), serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  line-height: 1.2;
+}
+.book-rule {
+  height: 1px;
+  margin: 0.5rem 0 0.7rem;
+  background: linear-gradient(90deg, #8a6b3f, transparent);
+}
+
+/* Lead paragraph, opened with an illuminated capital. `float` rather than a
+   grid so the following lines wrap around it the way a printed initial does. */
+.book-lead {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #4a3b24;
+}
+.book-dropcap {
+  float: left;
+  margin: 0.1rem 0.35rem -0.1rem 0;
+  font-family: var(--font-carved), serif;
+  font-weight: 900;
+  font-size: 2.05rem;
+  line-height: 0.85;
+  color: #8a5a2b;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.book-body {
+  margin: 0.6rem 0 0;
+  font-size: 0.775rem;
+  line-height: 1.45;
+  color: #55452c;
+}
+
+/* The architecture plate — real service marks, one per line, linked downward. */
+.book-plate {
+  margin: 0.7rem 0 0.15rem;
+  padding: 0.45rem 0.55rem 0.28rem;
+  border-top: 1px solid #c9b189;
+  border-bottom: 1px solid #c9b189;
+  background: linear-gradient(180deg, rgba(255, 250, 235, 0.5), rgba(236, 222, 190, 0.35));
+}
+.book-plate-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.42rem;
+}
+.book-plate-row:last-child {
+  padding-bottom: 0.1rem;
+}
+.book-plate-mark {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1px solid #c2a97f;
+  background: #fbf4e2;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+.book-plate-mark img {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+}
+.book-plate-glyph {
+  font-family: var(--font-carved), serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #7a5a30;
+}
+.book-plate-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.book-plate-label {
+  font-family: var(--font-carved), serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4a3a22;
+}
+.book-plate-detail {
+  margin-top: 0.12rem;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 0.56rem;
+  color: #7c6540;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The link down the chain, drawn from the mark above to the one below. */
+.book-plate-arrow {
+  position: absolute;
+  left: 0.9rem;
+  top: 1.85rem;
+  width: 1px;
+  height: 0.5rem;
+  background: #b59a6d;
+}
+.book-plate-arrow::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  bottom: -1px;
+  border-left: 2.5px solid transparent;
+  border-right: 2.5px solid transparent;
+  border-top: 3.5px solid #b59a6d;
+}
+
+/* The marginal note. Italic and indented, the way a printed aside sits. */
+.book-aside {
+  margin: auto 0 0;
+  padding-top: 0.5rem;
+  font-size: 0.68rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: #7a6440;
+  border-top: 1px dotted #c3aa81;
+}
+.book-aside-mark {
+  margin-right: 0.35rem;
+  font-style: normal;
+  color: #a8814a;
+}
+
+@media (max-width: 520px) {
+  .book-close {
+    top: 0.2rem;
+    right: 0.2rem;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * The tome's proximity invitation. Deliberately understated: it should
+ * catch the eye on approach, not compete with the room.
+ * ------------------------------------------------------------------ */
+
+.tome-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid oklch(0.66 0.07 62 / 0.75);
+  background: oklch(0.97 0.02 85 / 0.92);
+  color: oklch(0.34 0.04 45);
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px -10px oklch(0.2 0.03 45 / 0.7);
+  /* Hidden until you are close; the transition does the whole effect. */
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition:
+    opacity 0.45s var(--ease),
+    transform 0.45s var(--ease);
+}
+.tome-hint.is-near {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.tome-hint-mark {
+  color: oklch(0.6 0.12 45);
+  font-size: 0.7rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Quest card + brass compass, top-left.
+ *
+ * Its own cluster, opposite the Sound / Main website / Stumble pills —
+ * those three stay together (U2); this is a separate element, not a split.
+ * ------------------------------------------------------------------ */
+
+.quest-hud {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  left: max(1rem, env(safe-area-inset-left));
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.quest-card {
+  position: relative;
+  width: 13.5rem;
+  padding: 0.85rem 1rem 0.9rem;
+  border-radius: 16px;
+  border: 1px solid oklch(0.72 0.05 62 / 0.9);
+  background:
+    radial-gradient(circle at 18% 12%, oklch(0.88 0.04 70 / 0.4), transparent 45%),
+    linear-gradient(165deg, oklch(0.985 0.012 85 / 0.96), oklch(0.93 0.03 76 / 0.95));
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.6) inset,
+    0 14px 34px -22px oklch(0.15 0.03 45 / 0.75);
+  color: oklch(0.3 0.03 45);
+}
+.quest-card .world-corner {
+  width: 0.85rem;
+  height: 0.85rem;
+  top: 0.35rem;
+  left: 0.35rem;
+}
+.quest-card .world-corner-br {
+  top: auto;
+  left: auto;
+  bottom: 0.35rem;
+  right: 0.35rem;
+}
+
+.quest-eyebrow {
+  margin: 0;
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: oklch(0.54 0.1 40);
+}
+.quest-title {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-carved), var(--font-display), serif;
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+.quest-hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: oklch(0.47 0.025 45);
+}
+
+.quest-pips {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.65rem;
+}
+.quest-pip {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: oklch(0.85 0.02 70);
+  transition: background 0.3s var(--ease);
+}
+.quest-pip.is-done {
+  background: oklch(0.58 0.12 150);
+}
+.quest-pip.is-now {
+  background: oklch(0.62 0.15 55);
+  box-shadow: 0 0 0 3px oklch(0.62 0.15 55 / 0.18);
+}
+
+/* ---- the dial ---- */
+
+.compass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.compass-face {
+  position: relative;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 999px;
+  border: 2px solid oklch(0.58 0.07 70);
+  background:
+    radial-gradient(circle at 34% 28%, oklch(0.92 0.04 85), oklch(0.74 0.06 72) 62%, oklch(0.6 0.06 66));
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.5) inset,
+    0 10px 22px -14px oklch(0.2 0.03 45 / 0.8);
+}
+.compass-card {
+  position: absolute;
+  font-family: var(--font-carved), serif;
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: oklch(0.34 0.04 48);
+  letter-spacing: 0.06em;
+}
+.compass-n { top: 0.18rem; left: 50%; transform: translateX(-50%); }
+.compass-s { bottom: 0.18rem; left: 50%; transform: translateX(-50%); }
+.compass-e { right: 0.22rem; top: 50%; transform: translateY(-50%); }
+.compass-w { left: 0.22rem; top: 50%; transform: translateY(-50%); }
+
+/* The needle is rotated from JS every frame; give it no transition or it
+   will lag and swing past the target. */
+.compass-needle {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding-top: 0.5rem;
+}
+.compass-tip {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 0.32rem solid transparent;
+  border-right: 0.32rem solid transparent;
+  border-bottom: 0.85rem solid oklch(0.55 0.19 28);
+  filter: drop-shadow(0 1px 1px oklch(0.2 0.03 45 / 0.5));
+}
+.compass-idle-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  color: oklch(0.5 0.08 55);
+}
+.compass.is-idle .compass-face {
+  filter: saturate(0.5) brightness(0.96);
+}
+.compass-distance {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: oklch(0.97 0.01 85);
+  text-shadow: 0 1px 3px oklch(0.2 0.03 45 / 0.9);
+}
+
+/* The Stumble control is the objective during the fall step. */
+.world-fall-btn.is-objective {
+  animation: stumble-beckon 1.9s ease-in-out infinite;
+}
+@keyframes stumble-beckon {
+  50% {
+    box-shadow: 0 0 0 7px oklch(0.62 0.18 28 / 0);
+    background: oklch(0.9 0.08 32 / 0.96);
+  }
+}
+
+@media (max-width: 640px) {
+  .quest-card {
+    width: 10.5rem;
+    padding: 0.6rem 0.75rem 0.65rem;
+  }
+  .compass-face {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+}
