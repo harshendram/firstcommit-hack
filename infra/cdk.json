@@ -1,0 +1,13 @@
+{
+  "app": ".venv\\Scripts\\python.exe app.py",
+  "context": {
+    "bedrockModelId": "us.amazon.nova-2-lite-v1:0",
+    "webOrigins": "http://localhost:3000,https://main.d2dqtm6sqego9a.amplifyapp.com,https://suraksha.d2dqtm6sqego9a.amplifyapp.com",
+    "escalationContactTimeout": 180,
+    "investigationWindowMin": 15,
+    "wakeGraceMin": 15,
+    "provisionedConcurrency": 0,
+    "sttProvider": "sarvam",
+    "architecture": "arm64"
+  }
+}
