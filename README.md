@@ -1,212 +1,258 @@
-# Ally
+# Suraksha
 
-The product is **Ally** — family care for an aging parent, not surveillance.  
-Runbook + architecture: [`ally/README.md`](ally/README.md) · web `/` `/home` `/parent` · API `:8002`.
-
-The original Rakshak recovery/SOS stack remains under `backend/` as plumbing (Twilio fallback, Wear OS transport).
-
----
-
-# Rakshak (legacy plumbing)
-
+**Family care for an aging parent — without watching her.**
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
-![Express](https://img.shields.io/badge/Express.js-Backend-green)
+![AWS](https://img.shields.io/badge/AWS-Ship%20it-orange)
+![Bedrock](https://img.shields.io/badge/Amazon-Bedrock-purple)
 ![Wear%20OS](https://img.shields.io/badge/Wear%20OS-Galaxy-blue)
-![Sarvam](https://img.shields.io/badge/Powered%20by-Sarvam-orange)
+![Cedar](https://img.shields.io/badge/Policy-Cedar-green)
 
-### AI-powered Post-Discharge Patient Monitoring Platform built with Sarvam AI
+> Most days, Suraksha says nothing at all. That’s the point.
 
-## The Problem
+Suraksha is a **hardware-first, agentic companion** for aging at home: Galaxy Watch + tablet voice + long-term memory + proactive care + consent-aware family escalation — built to **ship on AWS**.
 
-After patients are discharged from the hospital, clinicians have very little visibility into how they're recovering until the next follow-up visit.
+Amma (72, Bengaluru) wears the watch and talks to Suraksha in Hindi or Hinglish. Rahul and Priya get a calm family view. They are notified only when something is actually wrong — and only the person who can show up is asked first.
 
-Patients often go home with discharge instructions they may not fully understand, symptoms can worsen silently, and complications are only discovered after they become serious enough to require another hospital visit.
-
-Rakshak bridges this gap through continuous AI-powered recovery monitoring.
-
----
-
-## The Solution
-
-Rakshak is an AI-powered post-discharge monitoring platform built using Sarvam AI.
-
-Patients can interact with Rakshak through either the web application or a Galaxy Wear OS companion app. Both support AI-powered voice check-ins, while the wearable additionally enables vital monitoring and gyroscope-based fall detection. Every interaction is processed by Sarvam AI to understand patient responses, generate personalized follow-up questions, assess recovery risk, and keep clinicians updated in real time.
-
-When the wearable detects a fall or emergency, Rakshak immediately alerts the configured responder while updating the care team.
+**Build story + architecture diagram:** [`docs/suraksha-build-story.md`](docs/suraksha-build-story.md) · [`docs/suraksha-aws-architecture.png`](docs/suraksha-aws-architecture.png)  
+**API / agent runbook:** [`ally/README.md`](ally/README.md)
 
 ---
 
-## Architecture
+## The problem
 
-Rakshak consists of three core components:
+Adult children living in another city do not need a live feed of their parent’s day. Cameras and always-on dashboards steal independence. Silence leaves families guessing. Panic buttons only help if she can reach them and wants to press them.
 
-- 🌐 **Web Application** — AI-powered multilingual voice check-ins accessible from any browser.
-- ⌚ **Galaxy Wear OS Companion App** — Voice check-ins with wearable sensor support including fall detection and vital monitoring.
-- 🩺 **Doctor Dashboard** — Real-time recovery monitoring, AI-generated summaries, risk assessment, and emergency alerts.
-
-Sarvam AI serves as the intelligence layer powering multilingual speech recognition, conversational reasoning, document understanding, and natural speech synthesis across all three components.
+Suraksha sits in between: it learns what is normal for Amma, talks to **her** first, remembers what she asked for, enforces what she said to keep private, and only then coordinates the person who can actually help.
 
 ---
 
-## Why Rakshak?
+## Who it’s for
 
-Unlike traditional symptom trackers, Rakshak combines multilingual voice conversations, discharge-aware follow-ups, wearable sensing, and real-time clinician visibility into a single platform—helping detect recovery issues earlier while reducing the burden on both patients and healthcare providers.
+| Who | What they get |
+| --- | --- |
+| **Parent (Amma)** | Watch + tablet companion; speak a task; almost no learning curve |
+| **Family (Rahul, Priya)** | Calm home/command views; push only when needed; one-tap respond |
+| **Nearby help (optional)** | Guard / neighbour path only if Cedar allows |
 
----
-
-## Features
-
-| Area | What you get |
-|------|----------------|
-| **Voice check-in** | Speak or tap chips; mic is primary — auto-sends after a pause |
-| **Multilingual** | Hinglish / Indic STT + TTS; agent matches the patient’s language |
-| **Personalized Recovery Context** | References recent recovery history and discharge instructions |
-| **AI Risk Assessment** | AI-generated recovery risk classification (`continue_monitoring`, `recommend_doctor_review`, `escalate`) |
-| **Doctor dashboard** | Multi-patient roster, same-day check-ins, live chart updates |
-| **Onboarding** | Account + recovery form **or** discharge PDF upload |
-| **Document intelligence** | Sarvam digitises discharge PDFs into usable care context |
-| **Galaxy Wear OS Companion** | Care check-in + fall detection / SOS on Galaxy Watch 4+ |
-| **Escalation** | Twilio WhatsApp / voice for surgical-team alerts |
-
-### Demo Patient
-
-**Lakshmi Rao** — recovering after a knee replacement surgery. The demo showcases continuity across multiple recovery check-ins while supporting personalized conversations based on discharge context.
-
-Logged-in users can also check in as themselves with their own profile and history.
+Suraksha is **not** an emergency service replacement. Family screens always surface **112**.
 
 ---
 
-## Sarvam models & APIs used
+## What Suraksha does
 
-Rakshak uses Sarvam throughout the entire patient journey—from multilingual speech recognition and conversational AI to document understanding and personalized recovery monitoring.
+| Capability | Detail |
+| --- | --- |
+| **Agentic voice companion** | Speak a task — reminders, check-ins, errands, health notes, consent. Tools run; it doesn’t only chat. |
+| **All-in-one memory** | DynamoDB single-table facts: day log, mood, alerts, reminders, consent, audit — not a disposable chat blob. |
+| **Hardware-first** | Galaxy Wear OS: wake, vitals, fall. Tablet for conversation. Put it on, talk. |
+| **Fall detection** | Watch signals open investigation / scripts; family chain only after policy and judgement. |
+| **Proactive care** | EventBridge every minute: due reminders, wake-window misses, investigation timeouts. |
+| **Ask her first** | Missed wake or worrying signal → Suraksha checks in with Amma before looping family. |
+| **Consent that blocks tools** | Spoken privacy rules → Cedar templates → `ConsentGuard` on every tool call; audit she can read. |
+| **Evidence-only family Q&A** | “Did she sleep okay?” → answers only from tool-returned records, or not sure / private. |
+| **Family escalation** | Step Functions: Rahul → timeout → Priya → ask about neighbour → neighbour if allowed → failsafe notify-all. |
+| **Quiet by design** | Most days: no noise. Engagement is not the goal. |
+| **Explore world (demo)** | 3D wardstone / gallery experience for storytelling and AWS gallery beats. |
 
-| Capability | Sarvam product / model | Role in Rakshak |
-|------------|------------------------|-----------------|
-| **Speech-to-text** | **Saaras v3** (`saaras:v3`) | Transcribe patient audio (code-mix / Indic) |
-| **Text-to-speech** | **Bulbul v3** (`bulbul:v3`, speaker `priya`) | Agent speaks greetings and follow-ups |
-| **LLM / reasoning** | **Sarvam 105B** (`sarvam-105b`) | Conversational care turns (JSON agent) |
-| **Document intelligence** | **Document Digitisation / Vision** | Convert discharge PDFs into structured recovery context |
+### Example moments
 
-**Document parsing flow:** Discharge PDF → Sarvam Document Digitisation → Structured care context → Personalized AI follow-ups
+| Moment | What happens | AWS |
+| --- | --- | --- |
+| First movement of the day | Watch posts `wake`; short morning check-in; “after I wake” reminders schedule | Lambda · DynamoDB · Bedrock · Polly |
+| Amma speaks a task | Transcribe → companion agent + tools → typed reply → Polly speaks | Transcribe · Bedrock · Polly |
+| “Don’t tell Priya about my health” | Fixed Cedar `forbid` template; she confirms; tools blocked thereafter | Cedar · DynamoDB audit |
+| Not up by usual time | Worker opens investigation; asks Amma first | EventBridge · Lambda |
+| Fall / unwell / no reply | Gate → Bedrock judge → tier policy in code | Bedrock · DynamoDB |
+| Family needed | Step Functions callbacks + Web Push accept/decline | Step Functions · Secrets Manager |
+| Family asks a question | Family Q&A agent; Cedar principal = asker | Bedrock · Cedar · DynamoDB |
 
-Env defaults (overridable):
+---
 
-```env
-SARVAM_STT_MODEL=saaras:v3
-SARVAM_TTS_MODEL=bulbul:v3
-SARVAM_TTS_SPEAKER=priya
-SARVAM_LLM_MODEL=sarvam-105b
-LLM_PROVIDER=sarvam
+## Architecture (AWS-first)
+
+![Suraksha on AWS](docs/suraksha-aws-architecture.png)
+
+```
+Wear OS / Parent tablet / Family web
+        │
+   AWS Amplify (Next.js) ── Amazon Cognito (JWT)
+        │
+   Amazon API Gateway HTTP API
+        │  JWT for people · device key for watch
+        ▼
+   AWS Lambda (containers via Amazon ECR)
+        ├─ API  — FastAPI · companion · scripts · handoff
+        ├─ Worker — proactive sweep
+        └─ Escalation — Step Functions tasks
+             │
+             ├─ Amazon Bedrock (Nova 2 Lite) — agents + judge
+             ├─ Amazon Transcribe — streaming STT
+             ├─ Amazon Polly — neural TTS
+             ├─ Cedar ConsentGuard — before every tool
+             └─ Amazon DynamoDB — single-table memory
+   Amazon EventBridge (1 min) → Worker
+   AWS Step Functions → family chain (waitForTaskToken)
+   AWS Secrets Manager · KMS · CloudWatch · CloudTrail
 ```
 
+**Design rules**
+
+- No silent LLM fallbacks — Bedrock failure → `llm_unavailable` in the UI.
+- The model decides language and judgement; **code** decides actions.
+- Safety cannot be switched off; conversations are never shared as a feed.
+- History before today may be simulated and labelled; **today is live**.
+
 ---
 
-## Hardware note
+## AWS services
 
-The Galaxy Wear OS companion app requires a physical smartwatch with accelerometer and gyroscope sensors. As these sensors cannot be emulated in a standard web environment, the wearable workflow is demonstrated in the submission video, while the complete web experience can be evaluated directly from the deployed application.
+| Layer | Services |
+| --- | --- |
+| Edge | Galaxy Wear OS · parent/family web |
+| Presentation | **AWS Amplify Hosting** |
+| Identity | **Amazon Cognito** (parent / family groups, custom attributes) |
+| Edge API | **Amazon API Gateway** HTTP API (JWT + public device routes, throttling) |
+| Compute | **AWS Lambda** (API, worker, escalation) · **Amazon ECR** |
+| IaC | **AWS CDK** → **AWS CloudFormation** |
+| Agents | **Amazon Bedrock** (Nova 2 Lite inference profile) · Strands-style tools |
+| Voice | **Amazon Transcribe** (STT) · **Amazon Polly** (TTS) |
+| Memory | **Amazon DynamoDB** (single table, GSI for due reminders, PITR, TTL) |
+| Policy | **Cedar** ConsentGuard + DynamoDB audit |
+| Secrets | **AWS Secrets Manager** (`ally/runtime`) · **AWS KMS** |
+| Proactive | **Amazon EventBridge** (rate: 1 minute) |
+| Escalation | **AWS Step Functions** Standard (`waitForTaskToken`) · Web Push (VAPID) |
+| Ops | **Amazon CloudWatch** (logs, metrics, alarms, dashboard) · **AWS CloudTrail** |
+| Access | **AWS IAM** least-privilege roles per function |
+
+Deep dive: [`docs/suraksha-build-story.md`](docs/suraksha-build-story.md).
+
+---
+
+## Product surfaces (web)
+
+| Route | Audience | Purpose |
+| --- | --- | --- |
+| `/` | Everyone | Landing — problem, how it works, architecture, watch story |
+| `/parent` | Amma | Tablet companion — talk, tasks, check-ins |
+| `/parent/privacy` | Amma | What was shared; consent / audit |
+| `/home` | Family | Calm family dashboard |
+| `/command` | Family | Timeline / command center |
+| `/family/respond/[id]` | Family | Push landing — accept / decline escalation |
+| `/guard` | Nearby help | Guard handset surface |
+| `/explore` | Demo | 3D wardstone / gallery world |
 
 ---
 
 ## Repository layout
 
 ```
-backend/     Express API + WebSockets (/care, /ws), CareAgent, Sarvam, Twilio
-web/         Next.js — landing, check-in, doctor dashboard, emergency UIs
-wear-os/     Kotlin + Compose companion (Android Studio)
+ally/          Agentic API — agents, policy (Cedar), scoring, store, escalation,
+               proactive, voice, Lambda handlers, tests
+web/           Next.js — landing, parent, family, command, guard, explore
+infra/         AWS CDK — DynamoDB, Cognito, API Gateway, Lambda, EventBridge,
+               Step Functions, IAM, CloudWatch
+wear-os/       Kotlin · Compose — watch UI, fall / wake / vitals, AudioBridge
+docs/          Build story + architecture diagram
+scripts/       Deploy / secrets helpers
+backend/       Legacy Rakshak plumbing (optional reference; not the Suraksha path)
 ```
-
-| Route | Purpose |
-|-------|---------|
-| `/` | Landing |
-| `/checkin` | Daily recovery check-in (browser mic) |
-| `/doctor` | Surgical team dashboard (multi-patient) |
-| `/command` | Emergency command center |
-| `/patient` | Emergency patient simulator |
-| `/family` | Family incident view |
-
-WebSockets: `/care` (check-in), `/ws` (fall / SOS).
 
 ---
 
-## How to run (local)
+## Deployed (Ship it)
+
+| Piece | Where |
+| --- | --- |
+| Web | Amplify Hosting (auto-build on `main`) |
+| API | API Gateway → Lambda containers |
+| Auth | Cognito user pool (demo users: `amma`, `rahul`, `priya`, …) |
+| Secrets | Secrets Manager bundle `ally/runtime` |
+| Data | DynamoDB table `Ally` (single-table memory) |
+
+Exact URLs and pool IDs: see [`ally/README.md`](ally/README.md) (environment-specific).
+
+---
+
+## Local development
 
 ### Prerequisites
 
 - Node.js 20+
-- Sarvam API key ([dashboard.sarvam.ai](https://dashboard.sarvam.ai))
-- Optional: Supabase Postgres (auth + patient profiles), Twilio (alerts)
-- Optional: Android Studio + Galaxy Watch for Wear OS
+- Python 3.11+
+- AWS credentials with access to DynamoDB / Bedrock (for live agent turns)
+- Docker (for image builds / deploy)
+- Optional: Android Studio + Galaxy Watch 4+ for Wear OS
 
-### 1. Environment
+### Agent API (`ally/` · port `8002`)
 
-```bash
-cp .env.example .env
-cp web/.env.local.example web/.env.local
+```powershell
+cd ally
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements-dev.txt
+copy .env.example .env
+python -m pytest -q
+python scripts\smoke_bedrock.py
+uvicorn app:app --reload --port 8002
 ```
 
-Fill at least:
+### Web (`web/` · port `3000`)
 
-| Variable | Purpose |
-|----------|---------|
-| `SARVAM_API_KEY` | Saaras, Bulbul, LLM, document digitisation |
-| `DATABASE_URL` | Supabase Postgres URI |
-| `AUTH_SECRET` | Long random string for JWT login |
-| Twilio + `CONTACT_*_PHONE` | Only if you want live escalation |
-| `PUBLIC_WEB_URL` | Default `http://localhost:3000` |
-
-`web/.env.local`:
-
-| Variable | Default / example |
-|----------|-------------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:3001/api` |
-| `NEXT_PUBLIC_WS_URL` | `ws://localhost:3001/ws` |
-| `NEXT_PUBLIC_CARE_WS_URL` | `ws://localhost:3001/care` |
-
-### 2. Backend (`:3001`)
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-### 3. Web (`:3000`)
-
-```bash
+```powershell
 cd web
+copy .env.local.example .env.local
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000/checkin](http://localhost:3000/checkin) and [http://localhost:3000/doctor](http://localhost:3000/doctor).
+Open [http://localhost:3000](http://localhost:3000) · `/parent` · `/home` · `/command`.
 
-### 4. Quick demo
+### Deploy to AWS
 
-1. Open `/doctor` and `/checkin` side by side.
-2. Sign in (or **Try demo** for Lakshmi).
-3. Start check-in → hear Bulbul → speak or tap a chip.
-4. Finish → confirm the doctor roster / chart updates.
-5. Optional: upload a discharge PDF on onboarding (Sarvam document digitisation).
+```powershell
+.\scripts\deploy.ps1 -SeedPassword "<family password>"
+```
 
-**Demo Note:** Lakshmi Rao is a demonstration patient with historical recovery data to showcase continuity across multiple check-ins. Today's voice conversation, AI reasoning, dashboard updates, and wearable events are processed live.
+Runs tests, writes the Secrets Manager bundle, deploys the CDK stack, seeds the family, prints frontend settings. Demo timings (real parameters, not fakes):
 
-### 5. Wear OS (optional)
+```powershell
+.\scripts\deploy.ps1 -SeedPassword "<password>" -c escalationContactTimeout=60 -c investigationWindowMin=2
+```
 
-See [`wear-os/README.md`](wear-os/README.md). Point `orchestrator.ws` at `ws://<your-lan-ip>:3001/care`. The wearable path is also shown in the submission video — see **Hardware note** above.
+Reset a demo day (keeps profile, family, consent, audit, labelled history):
+
+```powershell
+python ally/scripts/reset_day.py --yes
+```
+
+### Wear OS
+
+See [`wear-os/README.md`](wear-os/README.md). Watch posts to the API watch route with the device key from Secrets Manager. Sensor path (fall / wake / vitals) is shown in the submission video when a physical watch is required.
 
 ---
 
-## Risk actions
+## Team
 
-| Risk | Action | Notification |
-|------|--------|--------------|
-| 🟢 Green | `continue_monitoring` | None |
-| 🟡 Amber | `recommend_doctor_review` | WhatsApp (when Twilio configured) |
-| 🔴 Red | `escalate` | WhatsApp + voice call |
+| Member | Ownership |
+| --- | --- |
+| **Harshendra** | Agents, Cedar/consent, judge & scoring, Bedrock path, family web (`/home`, `/command`, respond) |
+| **Shashwath** | Store, escalation, proactive, CDK / Step Functions / deploy, Wear OS plumbing, `/guard` |
+| **Paccmann** | Watch UI & speech, voice/language, parent web & UI/i18n |
+
+Explore / wardstone world: shared equally.
+
+---
+
+## Limitations
+
+- Not a medical device, EMR, or replacement for emergency services.
+- iOS web push may require home-screen install; respond page covers action buttons.
+- New AWS accounts may be limited to Lambda concurrency 10 (provisioned concurrency deferred until quota increase).
+- Physical watch sensors cannot be fully emulated in the browser — wearable flow is in the submission video.
 
 ---
 
 ## License / hackathon
 
-Built for the Sarvam Epoch Buildathon — demo-oriented; not a clinical device or EMR replacement.
+Built for an AWS Ship it–style submission. Demo-oriented. Use responsibly; always keep human emergency numbers visible to family.
