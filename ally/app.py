@@ -19,7 +19,18 @@ from pydantic import BaseModel, Field
 from agents import family_qa, orchestrator
 from agents.schemas import HealthProbe
 from auth import Identity, current_identity, require_family, require_parent, verify_device_key
-from config import BEDROCK_MODEL_ID, CORS_ORIGINS, DEV_TOOLS, FAMILY_ASK_DAILY_LIMIT, HOST, PORT, STT_PROVIDER
+from config import (
+    AWS_REGION,
+    BEDROCK_FAILOVER_REGION,
+    BEDROCK_MODEL_ID,
+    CORS_ORIGINS,
+    DEV_TOOLS,
+    FAMILY_ASK_DAILY_LIMIT,
+    HOST,
+    POLLY_ENGINE,
+    POLLY_VOICE,
+    PORT,
+)
 from core import clock
 from core.errors import AllyError, Conflict, Forbidden, LLMError
 from core.log import log
@@ -122,7 +133,15 @@ async def health_deep() -> dict[str, Any]:
     probe = await structured(
         "health_probe", "You are a health check.", "Return ok=true and word='ready'.", HealthProbe, max_turns=2
     )
-    return {"ok": probe.ok, "model": BEDROCK_MODEL_ID, "stt": STT_PROVIDER, "time": clock.iso(clock.now())}
+    return {
+        "ok": probe.ok,
+        "model": BEDROCK_MODEL_ID,
+        "region": AWS_REGION,
+        "failover_region": BEDROCK_FAILOVER_REGION,
+        "stt": "amazon-transcribe",
+        "tts": f"amazon-polly:{POLLY_VOICE}:{POLLY_ENGINE}",
+        "time": clock.iso(clock.now()),
+    }
 
 
 # ---- shared state -----------------------------------------------------------------------------

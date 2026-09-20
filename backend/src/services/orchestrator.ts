@@ -9,7 +9,7 @@ import type {
   TriggerType,
 } from "../types.js";
 import { escalationService } from "./escalation.js";
-import { type GeminiClient, type ToolCall } from "./gemini.js";
+import { type CareLlmClient, type ToolCall } from "./careLlm.js";
 import {
   arrivalFallback,
   detectLanguageFromText,
@@ -19,7 +19,7 @@ import {
   resolveTtsLanguage,
 } from "./language.js";
 import { createLlmClient } from "./llm.js";
-import { createSarvamClient, type SarvamClient } from "./sarvam.js";
+import { createSpeechClient, type SpeechClient } from "./speech.js";
 
 export type BroadcastFn = (session: SessionEvent, reason: string) => void;
 export type TranscriptDeltaFn = (turn: ConversationTurn) => void;
@@ -32,11 +32,11 @@ export type TtsAudioFn = (payload: {
 /**
  * Orchestrator — spine of Rakshak.
  * Owns the conversation loop, tool-call → state-machine mapping,
- * Sarvam STT/TTS, and escalation.
+ * Amazon Transcribe and Polly, and escalation.
  */
 export class Orchestrator {
-  private gemini: GeminiClient;
-  private sarvam: SarvamClient;
+  private llm: CareLlmClient;
+  private speech: SpeechClient;
   private busy = false;
   private pendingPatient: { text: string; language: string } | null = null;
   private checkInTimer: NodeJS.Timeout | null = null;
@@ -49,8 +49,8 @@ export class Orchestrator {
   private onTts: TtsAudioFn = () => {};
 
   constructor() {
-    this.gemini = createLlmClient();
-    this.sarvam = createSarvamClient();
+    this.llm = createLlmClient();
+    this.speech = createSpeechClient();
   }
 
   wire(opts: {
@@ -83,8 +83,8 @@ export class Orchestrator {
     escalationService.stop();
 
     try {
-      this.gemini.reset();
-      this.gemini.startSession();
+      this.llm.reset();
+      this.llm.startSession();
       sessionStore.startFromTrigger(trigger);
 
       await this.speakFromSystem(
@@ -98,11 +98,11 @@ export class Orchestrator {
       return sessionStore.get();
     } catch (err) {
       console.error("[orch] trigger failed:", err);
-      this.gemini.reset();
+      this.llm.reset();
       sessionStore.reset();
       throw err instanceof Error
         ? err
-        : new Error("Trigger failed — check Gemini/Sarvam keys and try again.");
+        : new Error("Trigger failed — check AWS credentials and Bedrock model access, then try again.");
     } finally {
       this.busy = false;
       await this.flushPendingPatient();
@@ -148,7 +148,7 @@ export class Orchestrator {
       ].join("\n");
       console.log(`[orch] patient lang=${resolvedLang}`);
 
-      const result = await this.gemini.sendPatientTurn(llmInput);
+      const result = await this.llm.sendPatientTurn(llmInput);
       await this.applyToolCalls(result.toolCalls);
       const forced = this.ensureEscalationIfNeeded(result.toolCalls, trimmed);
 
@@ -182,7 +182,7 @@ export class Orchestrator {
     console.log(
       `[orch] patient audio received bytes=${buffer.length} mime=${mimeType}`
     );
-    const stt = await this.sarvam.transcribe(buffer, mimeType);
+    const stt = await this.speech.transcribe(buffer, mimeType);
     console.log(
       `[orch] STT completed in ${Date.now() - started}ms: ${JSON.stringify(stt.text)}`
     );
@@ -336,7 +336,7 @@ export class Orchestrator {
     this.toldPatientHelpComing = false;
     this.patientLanguage = config.demoLanguage;
     this.busy = false;
-    this.gemini.reset();
+    this.llm.reset();
     return sessionStore.reset();
   }
 
@@ -352,7 +352,7 @@ export class Orchestrator {
   }
 
   private async speakFromSystem(note: string): Promise<void> {
-    const result = await this.gemini.sendSystemNote(note);
+    const result = await this.llm.sendSystemNote(note);
     // Never let greeting/check-in system notes dial the phone by accident
     const isPreTriage =
       note.startsWith("greeting:") || note.startsWith("followup:");
@@ -377,7 +377,7 @@ export class Orchestrator {
     this.onTranscriptDelta(turn);
 
     try {
-      const tts = await this.sarvam.synthesize(text, ttsLang);
+      const tts = await this.speech.synthesize(text, ttsLang);
       this.onTts(tts);
     } catch (err) {
       console.error("[orch] TTS failed:", err);
@@ -539,7 +539,7 @@ export class Orchestrator {
 
   private beginEscalation(chainArg?: EscalationHop[]): void {
     const st = sessionStore.get().state;
-    // Don't re-dial / reset an in-flight chain when Gemini re-emits escalate
+    // Do not re-dial or reset an in-flight chain when the agent re-emits escalate
     if (
       (st === "escalating" || st === "awaiting_handover") &&
       sessionStore

@@ -1,4 +1,4 @@
-/** Capture 16 kHz mono PCM WAV in the browser for Suraksha Transcribe / Sarvam. */
+/** Capture 16 kHz mono PCM WAV in the browser — the exact format Amazon Transcribe streaming takes. */
 
 export function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

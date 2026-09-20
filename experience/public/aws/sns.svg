@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon SNS</title>
+  <rect x="0" y="0" width="80" height="80" fill="#E7157B"/>
+  <g fill="#FFFFFF">
+    <circle cx="24" cy="40" r="8"/>
+    <circle cx="56" cy="22" r="7"/>
+    <circle cx="56" cy="40" r="7"/>
+    <circle cx="56" cy="58" r="7"/>
+    <path d="M30 37.5l20-11 2.6 4.5-20 11zM32 38h18v4H32zM30.6 42.5l20 11L48 58l-20-11z"/>
+  </g>
+</svg>

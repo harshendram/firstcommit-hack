@@ -1,200 +1,200 @@
-import AdmZip from "adm-zip";
+/**
+ * Discharge PDF → structured care context, on AWS.
+ *
+ *   Amazon Textract          reads the PDF. `AnalyzeDocument` with the TABLES and
+ *                            FORMS features keeps medication tables and the
+ *                            "Instructions:" key/value pairs intact, which plain
+ *                            OCR flattens into unusable prose.
+ *   Amazon Comprehend Medical then lifts medications, dosages, conditions and
+ *                            test results out of that text, so the agent's
+ *                            follow-up questions are grounded in named entities
+ *                            rather than a wall of characters.
+ *
+ * Small files go through the synchronous API. Anything past Textract's 5 MB
+ * synchronous ceiling is uploaded to S3 and run through the asynchronous
+ * `StartDocumentAnalysis` job instead.
+ */
+
+import {
+  AnalyzeDocumentCommand,
+  type Block,
+  GetDocumentAnalysisCommand,
+  StartDocumentAnalysisCommand,
+} from "@aws-sdk/client-textract";
+import { DetectEntitiesV2Command } from "@aws-sdk/client-comprehendmedical";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { comprehendMedical, s3, textract } from "../aws/clients.js";
+import { breaker, sleep } from "../aws/resilience.js";
 import { config } from "../config.js";
 
-const BASE = "https://api.sarvam.ai";
+/** Textract's synchronous ceiling. Anything larger has to go through S3. */
+const SYNC_LIMIT_BYTES = 5 * 1024 * 1024;
+const ASYNC_POLL_MS = 2_000;
+const ASYNC_TIMEOUT_MS = 120_000;
+const MAX_CHARS = 12_000;
 
-function headers(): HeadersInit {
-  return {
-    "api-subscription-key": config.sarvamApiKey,
-    "Content-Type": "application/json",
-  };
-}
-
-async function sleep(ms: number): Promise<void> {
-  await new Promise((r) => setTimeout(r, ms));
-}
-
-function safeFilename(name: string): string {
+function safeKey(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^\.+/, "");
   return base.toLowerCase().endsWith(".pdf") ? base : `${base || "discharge"}.pdf`;
 }
 
-function firstFileUrl(
-  urls: Record<string, { file_url?: string } | undefined> | undefined
-): string | undefined {
-  if (!urls) return undefined;
-  for (const details of Object.values(urls)) {
-    if (details?.file_url) return details.file_url;
-  }
-  return undefined;
+/** Textract returns a block graph; LINE blocks in order are the readable document. */
+function linesFrom(blocks: Block[]): string {
+  return blocks
+    .filter((b) => b.BlockType === "LINE" && b.Text)
+    .map((b) => b.Text!.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
-function extractMarkdownFromZip(buf: Buffer): string {
-  const zip = new AdmZip(buf);
-  const entries = zip.getEntries();
-  const md = entries.find((e) => /\.md$/i.test(e.entryName) && !e.isDirectory);
-  if (md) return md.getData().toString("utf8").trim();
-  const txt = entries.find((e) => /\.txt$/i.test(e.entryName) && !e.isDirectory);
-  if (txt) return txt.getData().toString("utf8").trim();
-  const json = entries.find((e) => /\.json$/i.test(e.entryName) && !e.isDirectory);
-  if (json) {
-    try {
-      const parsed = JSON.parse(json.getData().toString("utf8")) as unknown;
-      return JSON.stringify(parsed, null, 2).slice(0, 12_000);
-    } catch {
-      /* fall through */
+async function analyzeSync(file: Buffer): Promise<string> {
+  const res = await breaker("textract").run(() =>
+    textract().send(
+      new AnalyzeDocumentCommand({
+        Document: { Bytes: file },
+        FeatureTypes: ["TABLES", "FORMS"],
+      })
+    )
+  );
+  return linesFrom(res.Blocks ?? []);
+}
+
+async function analyzeAsync(file: Buffer, filename: string): Promise<string> {
+  if (!config.aws.documentBucket) {
+    throw new Error(
+      `${filename} is larger than Textract's 5 MB synchronous limit and DOCUMENT_BUCKET is not set.`
+    );
+  }
+  const key = `discharge/${Date.now()}-${safeKey(filename)}`;
+  await s3().send(
+    new PutObjectCommand({
+      Bucket: config.aws.documentBucket,
+      Key: key,
+      Body: file,
+      ContentType: "application/pdf",
+      ServerSideEncryption: "AES256",
+    })
+  );
+
+  const started = await textract().send(
+    new StartDocumentAnalysisCommand({
+      DocumentLocation: { S3Object: { Bucket: config.aws.documentBucket, Name: key } },
+      FeatureTypes: ["TABLES", "FORMS"],
+    })
+  );
+  const jobId = started.JobId;
+  if (!jobId) throw new Error("Textract did not return a JobId");
+
+  const deadline = Date.now() + ASYNC_TIMEOUT_MS;
+  const blocks: Block[] = [];
+  let nextToken: string | undefined;
+
+  while (Date.now() < deadline) {
+    await sleep(ASYNC_POLL_MS);
+    const page = await textract().send(
+      new GetDocumentAnalysisCommand({ JobId: jobId, NextToken: nextToken })
+    );
+    if (page.JobStatus === "FAILED") {
+      throw new Error(`Textract job failed: ${page.StatusMessage || "unknown"}`);
     }
+    if (page.JobStatus === "IN_PROGRESS") continue;
+
+    blocks.push(...(page.Blocks ?? []));
+    nextToken = page.NextToken;
+    if (!nextToken) return linesFrom(blocks);
   }
-  throw new Error("No readable text found in digitisation output");
+  throw new Error("Textract job timed out");
 }
 
-/** Sarvam Document Digitisation — async job flow, returns markdown text. */
+interface MedicalEntity {
+  category: string;
+  type: string;
+  text: string;
+  attributes: string[];
+}
+
+/**
+ * Comprehend Medical over the extracted text. Low-confidence hits are dropped —
+ * a wrong medication name in the agent's context is worse than a missing one.
+ */
+async function extractEntities(text: string): Promise<MedicalEntity[]> {
+  if (!config.aws.comprehendMedicalEnabled || !text.trim()) return [];
+  try {
+    const res = await breaker("comprehend-medical").run(() =>
+      comprehendMedical().send(new DetectEntitiesV2Command({ Text: text.slice(0, 20_000) }))
+    );
+    return (res.Entities ?? [])
+      .filter((e) => (e.Score ?? 0) >= 0.75)
+      .filter((e) =>
+        ["MEDICATION", "MEDICAL_CONDITION", "TEST_TREATMENT_PROCEDURE"].includes(
+          e.Category ?? ""
+        )
+      )
+      .map((e) => ({
+        category: e.Category ?? "",
+        type: e.Type ?? "",
+        text: e.Text ?? "",
+        attributes: (e.Attributes ?? [])
+          .filter((a) => (a.Score ?? 0) >= 0.75)
+          .map((a) => `${a.Type}: ${a.Text}`),
+      }));
+  } catch (err) {
+    // Entity extraction enriches the context; it is not required for it.
+    console.warn(
+      "[comprehend-medical] entity extraction skipped:",
+      err instanceof Error ? err.message : err
+    );
+    return [];
+  }
+}
+
+function renderEntities(entities: MedicalEntity[]): string {
+  if (entities.length === 0) return "";
+  const byCategory = new Map<string, string[]>();
+  for (const entity of entities) {
+    const line = entity.attributes.length
+      ? `${entity.text} (${entity.attributes.join("; ")})`
+      : entity.text;
+    const bucket = byCategory.get(entity.category) ?? [];
+    if (!bucket.includes(line)) bucket.push(line);
+    byCategory.set(entity.category, bucket);
+  }
+  const sections = [...byCategory].map(
+    ([category, lines]) => `${category}:\n- ${lines.join("\n- ")}`
+  );
+  return `\n\n--- STRUCTURED (Amazon Comprehend Medical) ---\n${sections.join("\n\n")}`;
+}
+
+/** Textract + Comprehend Medical — returns the care context the agent reads. */
 export async function digitiseDischargePdf(
   file: Buffer,
   filename: string,
   language = "en-IN"
 ): Promise<string> {
-  if (config.useMockAi || !config.sarvamApiKey) {
-    console.log("[doc] mock digitisation — using demo discharge text");
-    return MOCK_DISCHARGE;
+  void language; // Textract detects script itself; kept for call-site compatibility.
+
+  if (config.useOfflineAi) {
+    console.log("[doc] offline mode — using the demo discharge text");
+    return OFFLINE_DISCHARGE;
   }
 
   const started = Date.now();
-  const uploadName = safeFilename(filename);
+  const text =
+    file.length <= SYNC_LIMIT_BYTES
+      ? await analyzeSync(file)
+      : await analyzeAsync(file, filename);
 
-  // 1) Create job (returns job_id only — no upload_url)
-  const createRes = await fetch(`${BASE}/doc-digitization/job/v1`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify({
-      job_parameters: { language, output_format: "md" },
-    }),
-  });
-  if (!createRes.ok) {
-    const body = await createRes.text();
-    throw new Error(`Sarvam job create failed (${createRes.status}): ${body}`);
-  }
-  const created = (await createRes.json()) as { job_id?: string };
-  const jobId = created.job_id;
-  if (!jobId) {
-    throw new Error(
-      `Sarvam job create missing job_id: ${JSON.stringify(created)}`
-    );
-  }
+  if (!text.trim()) throw new Error("Textract found no readable text in that PDF");
 
-  // 2) Get presigned upload URL
-  const uploadLinksRes = await fetch(
-    `${BASE}/doc-digitization/job/v1/upload-files`,
-    {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({ job_id: jobId, files: [uploadName] }),
-    }
-  );
-  if (!uploadLinksRes.ok) {
-    const body = await uploadLinksRes.text();
-    throw new Error(
-      `Sarvam upload links failed (${uploadLinksRes.status}): ${body}`
-    );
-  }
-  const uploadLinks = (await uploadLinksRes.json()) as {
-    upload_urls?: Record<string, { file_url?: string }>;
-  };
-  const uploadUrl =
-    uploadLinks.upload_urls?.[uploadName]?.file_url ??
-    firstFileUrl(uploadLinks.upload_urls);
-  if (!uploadUrl) {
-    throw new Error(
-      `Sarvam upload links missing file_url: ${JSON.stringify(uploadLinks)}`
-    );
-  }
-
-  // 3) PUT file to Azure presigned URL (requires x-ms-blob-type)
-  const uploadRes = await fetch(uploadUrl, {
-    method: "PUT",
-    body: new Uint8Array(file),
-    headers: {
-      "Content-Type": "application/pdf",
-      "x-ms-blob-type": "BlockBlob",
-    },
-  });
-  if (!uploadRes.ok) {
-    const body = await uploadRes.text().catch(() => "");
-    throw new Error(
-      `Sarvam file upload failed (${uploadRes.status}): ${body.slice(0, 300)}`
-    );
-  }
-
-  // 4) Start job
-  const startRes = await fetch(
-    `${BASE}/doc-digitization/job/v1/${jobId}/start`,
-    { method: "POST", headers: headers() }
-  );
-  if (!startRes.ok) {
-    const body = await startRes.text();
-    throw new Error(`Sarvam job start failed (${startRes.status}): ${body}`);
-  }
-
-  // 5) Poll status
-  const deadline = Date.now() + 120_000;
-  let state = "Running";
-  while (Date.now() < deadline) {
-    await sleep(2000);
-    const statusRes = await fetch(
-      `${BASE}/doc-digitization/job/v1/${jobId}/status`,
-      { headers: { "api-subscription-key": config.sarvamApiKey } }
-    );
-    if (!statusRes.ok) continue;
-    const status = (await statusRes.json()) as {
-      job_state?: string;
-      error_message?: string;
-    };
-    state = status.job_state ?? state;
-    if (state === "Completed" || state === "PartiallyCompleted") break;
-    if (state === "Failed") {
-      throw new Error(
-        `Sarvam document digitisation failed: ${status.error_message || "unknown"}`
-      );
-    }
-  }
-  if (state !== "Completed" && state !== "PartiallyCompleted") {
-    throw new Error("Document digitisation timed out");
-  }
-
-  // 6) Get download URLs (POST), then fetch the ZIP
-  const downloadLinksRes = await fetch(
-    `${BASE}/doc-digitization/job/v1/${jobId}/download-files`,
-    { method: "POST", headers: headers() }
-  );
-  if (!downloadLinksRes.ok) {
-    const body = await downloadLinksRes.text();
-    throw new Error(
-      `Sarvam download links failed (${downloadLinksRes.status}): ${body}`
-    );
-  }
-  const downloadLinks = (await downloadLinksRes.json()) as {
-    download_urls?: Record<string, { file_url?: string }>;
-  };
-  const downloadUrl = firstFileUrl(downloadLinks.download_urls);
-  if (!downloadUrl) {
-    throw new Error(
-      `Sarvam download links missing file_url: ${JSON.stringify(downloadLinks)}`
-    );
-  }
-
-  const zipRes = await fetch(downloadUrl);
-  if (!zipRes.ok) {
-    throw new Error(`Sarvam output download failed (${zipRes.status})`);
-  }
-  const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-  const text = extractMarkdownFromZip(zipBuf).slice(0, 12_000);
+  const entities = await extractEntities(text);
+  const combined = `${text}${renderEntities(entities)}`.slice(0, MAX_CHARS);
   console.log(
-    `[doc] digitised ${filename} in ${Date.now() - started}ms · ${text.length} chars`
+    `[doc] ${filename} in ${Date.now() - started}ms · ${text.length} chars · ${entities.length} medical entities`
   );
-  return text;
+  return combined;
 }
 
-const MOCK_DISCHARGE = `DISCHARGE SUMMARY
+const OFFLINE_DISCHARGE = `DISCHARGE SUMMARY
 
 Patient: Lakshmi Rao
 Age: 68

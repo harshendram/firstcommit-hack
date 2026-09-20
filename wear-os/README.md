@@ -8,7 +8,8 @@ voice triage on `/ws`.
 
 1. **Care (default)** — tap **Check in** → `/care` daily recovery conversation.
 2. **SOS** — drop the watch (or tap **Simulate fall**) → `/ws` fall triage,
-   Twilio escalation, same as the original Rakshak emergency path.
+   escalation via Amazon SNS and Amazon Connect, same as the original Rakshak
+   emergency path.
 
 Fall detection is armed while idle. It disarms during an active check-in so a
 gesture mid-conversation doesn't hijack the session.

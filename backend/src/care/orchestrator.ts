@@ -13,7 +13,7 @@ import {
   detectLanguageFromText,
   normalizeLanguageCode,
 } from "../services/language.js";
-import { createSarvamClient, type SarvamClient } from "../services/sarvam.js";
+import { createSpeechClient, type SpeechClient } from "../services/speech.js";
 import {
   CareAgent,
   applyContextualAffirmation,
@@ -107,11 +107,11 @@ function emptySession(): CheckInSession {
 class CareOrchestrator {
   private session: CheckInSession = emptySession();
   private agent = new CareAgent();
-  private sarvam: SarvamClient | null = null;
+  private speechClient: SpeechClient | null = null;
   private hooks: CareHooks | null = null;
   private busy = false;
   private clarifyCount = 0;
-  /** Browser visitor identity for Supabase traction. */
+  /** Browser visitor identity for check-in traction. */
   private visitor: { name: string; email: string } | null = null;
   private activeRunId: string | null = null;
   /** demo = Lakshmi seed; user = logged-in person's own profile. */
@@ -159,9 +159,9 @@ class CareOrchestrator {
     return this.visitor;
   }
 
-  private speech(): SarvamClient {
-    if (!this.sarvam) this.sarvam = createSarvamClient();
-    return this.sarvam;
+  private speech(): SpeechClient {
+    if (!this.speechClient) this.speechClient = createSpeechClient();
+    return this.speechClient;
   }
 
   private emitSession(): void {
@@ -256,7 +256,7 @@ class CareOrchestrator {
     if (!demo) {
       if (!dbConfigured() || !schemaReady()) {
         throw new Error(
-          "Database unavailable — set DATABASE_URL to your Supabase Postgres URI"
+          "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint"
         );
       }
       const stored = await getPatientProfile(userId);
@@ -278,7 +278,7 @@ class CareOrchestrator {
     if (wantsTraction) {
       if (!dbConfigured() || !schemaReady()) {
         throw new Error(
-          "Database unavailable — set DATABASE_URL to your Supabase Postgres URI"
+          "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint"
         );
       }
       let user: { id: string; name: string; email: string };

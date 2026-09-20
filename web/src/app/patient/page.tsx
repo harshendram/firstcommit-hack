@@ -6,6 +6,7 @@ import { StateBadge } from "@/components/Badges";
 import { Fall, Mic, Speaker, Watch } from "@/components/ui/Icon";
 import { AppHeader, AppShell, Banner, PillLink, SectionTitle } from "@/components/ui/Shell";
 import { useRakshakSocket } from "@/hooks/useRakshakSocket";
+import { startWavRecorder, type WavRecorder } from "@/lib/recordWav";
 import { cn } from "@/lib/utils";
 import type { TriggerType } from "@/lib/types";
 
@@ -86,8 +87,7 @@ export default function PatientSimulatorPage() {
   const [micError, setMicError] = useState<string | null>(null);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [thinking, setThinking] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const recorderRef = useRef<WavRecorder | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const unlockRef = useRef(false);
@@ -161,53 +161,31 @@ export default function PatientSimulatorPage() {
     send({ type: "trigger", trigger_type: type });
   };
 
+  // Amazon Transcribe streaming takes PCM16, so record WAV directly rather than
+  // WebM/Opus — it saves a transcode and keeps latency down on the voice turn.
   const startRecording = async () => {
     setMicError(null);
     unlockAudio();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : undefined;
-      const recorder = mime
-        ? new MediaRecorder(stream, { mimeType: mime })
-        : new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-        const bytes = new Uint8Array(await blob.arrayBuffer());
-        let binary = "";
-        const chunk = 0x8000;
-        for (let i = 0; i < bytes.length; i += chunk) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-        }
-        setThinking(true);
-        const mimeType = (blob.type || "audio/webm").split(";")[0].trim();
-        send({
-          type: "patient_audio",
-          audio_base64: btoa(binary),
-          mime_type: mimeType || "audio/webm",
-        });
-      };
-      recorderRef.current = recorder;
-      recorder.start();
+      recorderRef.current = await startWavRecorder();
       setRecording(true);
     } catch {
       setMicError("Microphone unavailable or permission denied.");
     }
   };
 
-  const stopRecording = () => {
-    recorderRef.current?.stop();
+  const stopRecording = async () => {
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
     setRecording(false);
+    if (!recorder) return;
+    const clip = await recorder.stop();
+    setThinking(true);
+    send({
+      type: "patient_audio",
+      audio_base64: clip.audio_base64,
+      mime_type: clip.mime_type,
+    });
   };
 
   return (

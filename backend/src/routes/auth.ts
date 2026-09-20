@@ -17,7 +17,7 @@ function dbUnavailable(res: import("express").Response): boolean {
   if (!dbConfigured() || !schemaReady()) {
     res.status(503).json({
       error:
-        "Database unavailable — set DATABASE_URL to your Supabase Postgres URI",
+        "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint",
     });
     return true;
   }

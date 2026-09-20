@@ -1,10 +1,12 @@
+import { ConverseCommand, type Message } from "@aws-sdk/client-bedrock-runtime";
+import { bedrock, bedrockFailover } from "../aws/clients.js";
+import { breaker, withFailover } from "../aws/resilience.js";
 import { config } from "../config.js";
 import { looksLikeCodeMix, normalizeLanguageCode } from "../services/language.js";
 import { summariseHistoryForPrompt, type MemoryAnchor } from "./baseline.js";
 import type { Baseline, CheckIn, PatientProfile, SymptomScores } from "./types.js";
 import { EMPTY_SYMPTOMS } from "./types.js";
 
-const ENDPOINT = "https://api.sarvam.ai/v1/chat/completions";
 
 const PLACEHOLDERS = new Set([
   "(no content)",
@@ -626,7 +628,7 @@ Hinglish, not stiff English, not pure formal Hindi. Switch if they switch.`;
 
 /**
  * Daily check-in conversation. Same single-JSON-per-turn contract as the
- * emergency agent, because Sarvam's tool calling returns null content.
+ * emergency agent — one Bedrock round trip per turn keeps watch latency low.
  */
 export class CareAgent {
   private messages: ChatMessage[] = [];
@@ -894,55 +896,57 @@ export class CareAgent {
     ];
   }
 
+  /**
+   * One Bedrock Converse round trip per turn.
+   *
+   * Converse keeps the system prompt out of the message list, so the rolling
+   * window below never risks trimming away the patient's care context. A
+   * region-shaped failure retries the whole turn in the failover region before
+   * giving up; everything else (throttles, 5xx) is already handled by the SDK's
+   * adaptive retry policy.
+   */
   private async request(messages: ChatMessage[]): Promise<string> {
-    const body = {
-      model: config.sarvamLlmModel,
-      messages,
-      temperature: 0.3,
-      max_tokens: 400,
-      reasoning_effort: null,
-    };
+    const system = messages
+      .filter((m) => m.role === "system")
+      .map((m) => ({ text: m.content }));
+    const turns: Message[] = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: [{ text: m.content }],
+      }));
 
-    let lastErr: unknown = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const started = Date.now();
-      try {
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: {
-            "api-subscription-key": config.sarvamApiKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-          signal: AbortSignal.timeout(45_000),
-        });
+    const send = (client: ReturnType<typeof bedrock>) =>
+      client.send(
+        new ConverseCommand({
+          modelId: config.aws.bedrockModelId,
+          system,
+          messages: turns,
+          inferenceConfig: { maxTokens: config.aws.bedrockMaxTokens, temperature: 0.3 },
+        })
+      );
 
-        if (!res.ok) {
-          const errBody = await res.text();
-          lastErr = new Error(`Sarvam LLM failed (${res.status}): ${errBody}`);
-          if ((res.status === 429 || res.status >= 500) && attempt < 2) {
-            await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
-            continue;
-          }
-          throw lastErr;
-        }
+    const started = Date.now();
+    const { result, failedOver } = await breaker("bedrock.care", {
+      threshold: 4,
+      cooldownMs: 20_000,
+    }).run(() =>
+      withFailover(
+        "bedrock.care",
+        () => send(bedrock()),
+        () => send(bedrockFailover())
+      )
+    );
 
-        const data = (await res.json()) as {
-          choices?: Array<{ message?: { content?: string | null } }>;
-        };
-        const content = (data.choices?.[0]?.message?.content ?? "").trim();
-        console.log(
-          `[care-llm] ${config.sarvamLlmModel} ${Date.now() - started}ms chars=${content.length}`
-        );
-        return isDegenerate(content) ? "" : content;
-      } catch (err) {
-        lastErr = err;
-        if (attempt < 2) {
-          await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
-          continue;
-        }
-      }
-    }
-    throw lastErr instanceof Error ? lastErr : new Error("Sarvam LLM failed");
+    const content = (result.output?.message?.content ?? [])
+      .map((b) => b.text ?? "")
+      .join("")
+      .trim();
+    console.log(
+      `[care-llm] bedrock ${config.aws.bedrockModelId} ${Date.now() - started}ms` +
+        ` region=${failedOver ? config.aws.bedrockFailoverRegion : config.aws.bedrockRegion}` +
+        ` chars=${content.length}`
+    );
+    return isDegenerate(content) ? "" : content;
   }
 }

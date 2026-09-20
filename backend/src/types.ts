@@ -40,7 +40,7 @@ export interface EscalationHop {
   /** E.164 phone, e.g. +9198XXXXXXXX */
   phone?: string;
   /** Channel used for the live notify attempt */
-  channel?: "whatsapp" | "sms" | "voice";
+  channel?: "sms" | "voice" | "push";
 }
 
 export interface TimelineEntry {

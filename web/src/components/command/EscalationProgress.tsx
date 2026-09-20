@@ -54,12 +54,12 @@ export function EscalationProgress({ chain }: { chain: EscalationHop[] }) {
                   </div>
                   {(hop.channel || hop.phone) && (
                     <div className="mt-1 truncate text-[0.72rem] text-ink-faint">
-                      {hop.channel === "whatsapp"
-                        ? "WhatsApp"
-                        : hop.channel === "sms"
-                          ? "SMS"
-                          : hop.channel === "voice"
-                            ? "Voice call"
+                      {hop.channel === "sms"
+                        ? "SMS · Amazon SNS"
+                        : hop.channel === "voice"
+                          ? "Voice · Amazon Connect"
+                          : hop.channel === "push"
+                            ? "Web Push"
                             : "Phone"}
                       {hop.phone ? ` · ${hop.phone}` : ""}
                     </div>

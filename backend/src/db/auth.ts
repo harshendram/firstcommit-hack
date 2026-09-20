@@ -21,7 +21,7 @@ export interface AuthTokenPayload {
 function assertDb(): void {
   if (!dbConfigured() || !schemaReady()) {
     throw new Error(
-      "Database unavailable — set DATABASE_URL to your Supabase Postgres URI"
+      "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint"
     );
   }
 }

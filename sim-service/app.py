@@ -40,7 +40,7 @@ _DEFAULT_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3001",
     "http://localhost:5173",
-    "https://rakshak-alpha-lake.vercel.app",
+    "https://main.d2dqtm6sqego9a.amplifyapp.com",
 ]
 _extra = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(

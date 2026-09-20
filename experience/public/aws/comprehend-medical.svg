@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon Comprehend Medical</title>
+  <rect x="0" y="0" width="80" height="80" fill="#01A88D"/>
+  <g fill="#FFFFFF">
+    <path d="M40 16c-11 0-20 9-20 20 0 8.4 5.2 15.6 12.5 18.6V62a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-7.4C54.8 51.6 60 44.4 60 36c0-11-9-20-20-20zm0 6c7.7 0 14 6.3 14 14 0 6.3-4.2 11.6-10 13.4V58h-8v-8.6c-5.8-1.8-10-7.1-10-13.4 0-7.7 6.3-14 14-14z"/>
+    <path d="M37 27h6v6h6v6h-6v6h-6v-6h-6v-6h6z"/>
+  </g>
+</svg>

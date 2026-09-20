@@ -2,8 +2,8 @@
 
 > **Status (implemented):** `/family` + `/family/:sessionId` live WebSocket view,
 > `family_on_my_way` / `family_arrived` write path into the orchestrator (AI tells
-> the patient), PWA manifest + icons + haptics. WhatsApp alerts include the
-> family deep link when Twilio is configured.
+> the patient), PWA manifest + icons + haptics. Amazon SNS alerts include the
+> family deep link whenever a destination phone is configured.
 
 Second frontend view for family members. Same React project, same WebSocket, same `SessionEvent`/`HandoffSummary` types as the Command Center dashboard — do not duplicate backend logic or create a new service. This is a new route/page only.
 

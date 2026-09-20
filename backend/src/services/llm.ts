@@ -1,23 +1,16 @@
 import { config } from "../config.js";
-import {
-  createGeminiClient,
-  MockGeminiClient,
-  type GeminiClient,
-} from "./gemini.js";
-import { LiveSarvamLlmClient } from "./sarvamLlm.js";
+import { BedrockCareLlmClient } from "./bedrock.js";
+import { type CareLlmClient, OfflineCareLlmClient } from "./careLlm.js";
 
-/** Pick the reasoning backend: Sarvam LLM (default), Gemini, or mock. */
-export function createLlmClient(): GeminiClient {
-  if (config.llmProvider === "mock") {
-    console.log("[llm] Using MockGeminiClient (LLM_PROVIDER=mock)");
-    return new MockGeminiClient();
+/** Pick the reasoning backend: Amazon Bedrock (default) or the offline client. */
+export function createLlmClient(): CareLlmClient {
+  if (config.llmProvider === "offline") {
+    console.log("[llm] OfflineCareLlmClient (LLM_PROVIDER=offline)");
+    return new OfflineCareLlmClient();
   }
-  if (config.llmProvider === "sarvam") {
-    if (!config.sarvamApiKey) {
-      throw new Error("SARVAM_API_KEY is required when LLM_PROVIDER=sarvam");
-    }
-    console.log(`[llm] SARVAM · model=${config.sarvamLlmModel}`);
-    return new LiveSarvamLlmClient();
-  }
-  return createGeminiClient();
+  console.log(
+    `[llm] Amazon Bedrock · model=${config.aws.bedrockModelId} ` +
+      `region=${config.aws.bedrockRegion} failover=${config.aws.bedrockFailoverRegion}`
+  );
+  return new BedrockCareLlmClient();
 }

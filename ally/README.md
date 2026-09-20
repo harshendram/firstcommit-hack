@@ -11,7 +11,7 @@ Amma (72, Bengaluru, speaks Hindi) talks to Ally on a tablet and wears a watch. 
 | Moment | What happens | AWS / open source |
 |---|---|---|
 | First movement of the day | The watch posts `wake`; Ally speaks a ≤3-sentence morning check-in grounded only in real data; "after I wake up" reminders are scheduled | Lambda · DynamoDB · Bedrock Nova 2 Lite · Polly Kajal |
-| Amma talks | Sarvam STT → Strands companion agent with tools → typed `CompanionReply` → Polly Kajal speaks | Strands Agents · Bedrock |
+| Amma talks | Amazon Transcribe → Strands companion agent with tools → typed `CompanionReply` → Polly Kajal speaks | Transcribe · Strands Agents · Bedrock · Polly |
 | "Priya ko meri tabiyat ke baare mein mat batana" | The tool renders a **Cedar** `forbid` rule from a fixed template (the model never writes Cedar); Amma confirms with हाँ | Cedar (`cedarpy`) |
 | Any tool call | A Strands `BeforeToolCallEvent` hook asks Cedar first; every allow/deny is written to an audit log Amma can read | Strands hooks · Cedar · DynamoDB |
 | Not up by her usual time | The one-minute sweep opens an investigation and asks **Amma first** | EventBridge · Lambda |
@@ -27,11 +27,14 @@ Amplify (Next.js) ── Cognito ── API Gateway HTTP API (JWT)
                    Lambda (FastAPI + Lambda Web Adapter, container)
                      ├─ Strands agents → Bedrock Nova 2 Lite (inference profile)
                      ├─ ConsentGuard hook → Cedar → audit log
-                     ├─ Sarvam STT · Polly Kajal TTS
+                     ├─ Amazon Transcribe STT · Amazon Polly Kajal TTS
                      └─ DynamoDB single table (one item per fact)
 EventBridge (1 min) → Lambda worker: reminders · wake window · investigation timeouts
 Step Functions (STANDARD): ask child → timeout → next → parent → neighbour → notify all (failsafe)
 Web Push (VAPID keys in Secrets Manager) → family phones & Amma's tablet
+SNS (SMS + ops topic) · Connect (outbound voice) · SQS dead-letter queues
+S3 (discharge PDFs, staged call audio) · AWS Backup (daily DynamoDB recovery points)
+CloudWatch (6 alarms + dashboard) · X-Ray (traces on every function)
 Wear OS watch → POST /ally/watch (device key)
 ```
 
@@ -40,6 +43,10 @@ Wear OS watch → POST /ally/watch (device key)
 - The model decides language and judgement; code decides actions.
 - Safety can't be switched off; conversations are never shared.
 - Only history before today is simulated and labelled. Today is live.
+- Degrade loudly: a sick dependency shows up in `/health/deep` and on an alarm, never as a quietly worse answer.
+
+Failure modes and the layers behind each one: [`../docs/RESILIENCE.md`](../docs/RESILIENCE.md).
+Full service map: [`../docs/AWS-ARCHITECTURE.md`](../docs/AWS-ARCHITECTURE.md).
 
 ## Local development
 
@@ -47,8 +54,8 @@ Wear OS watch → POST /ally/watch (device key)
 cd ally
 python -m venv .venv; .venv\Scripts\activate
 pip install -r requirements-dev.txt
-copy .env.example .env        # set SARVAM_API_KEY; ALLY_DEV_TOOLS=1 enables the dev identity switcher
-python -m pytest -q           # 48 offline tests (moto DynamoDB, no network)
+copy .env.example .env        # ALLY_DEV_TOOLS=1 enables the dev identity switcher
+python -m pytest -q           # 55 offline tests (moto DynamoDB, no network)
 python scripts\smoke_bedrock.py   # live Bedrock check: every schema, exits non-zero on failure
 uvicorn app:app --reload --port 8002
 ```
@@ -73,12 +80,13 @@ Pages:
 | Web app | https://main.d2dqtm6sqego9a.amplifyapp.com (Amplify Hosting, auto-builds on push to `main`) |
 | API | https://6cuto4692g.execute-api.us-east-1.amazonaws.com |
 | Sign-in | Cognito pool `us-east-1_labF3UJsJ`; users `amma`, `rahul`, `priya`, `sunita` |
-| Secrets | AWS Secrets Manager, one bundle: `ally/runtime` |
+| Secrets | AWS Secrets Manager, one bundle: `ally/runtime` (web push keys, watch device key, reply-token HMAC) |
 | Data | DynamoDB `Ally` (single table) |
 
 ## Deploy
 
-Prerequisites: Docker Desktop, AWS CLI v2, CDK CLI, Bedrock access for Nova 2 Lite, and `SARVAM_API_KEY` in the root `.env`.
+Prerequisites: Docker Desktop, AWS CLI v2, CDK CLI, and Amazon Bedrock model access for Nova 2 Lite.
+There are no third-party API keys — speech, reasoning and documents all use the function's IAM role.
 
 ```powershell
 .\scripts\deploy.ps1 -SeedPassword "<family password>"
@@ -93,7 +101,7 @@ For filming, shorten timings with `-c escalationContactTimeout=60 -c investigati
 ## Cost notes
 - DynamoDB on-demand, Step Functions Standard (a handful of transitions per escalation), and EventBridge are pennies.
 - Nova 2 Lite is billed per token; the judge only runs behind the deterministic gate.
-- Images are x86_64 (this build machine's Docker engine); `-c architecture=arm64` switches to cheaper Graviton where an arm64 builder is available.
+- Images build for ARM64 (Graviton) by default; `-c architecture=x86_64` switches back where no arm64 Docker builder is available.
 - Provisioned and reserved concurrency are off, because a new account's total Lambda concurrency is 10 and AWS rejects reservations below that. After a quota increase, `-c provisionedConcurrency=1` removes cold starts on voice turns (about $0.60/day).
 
 ## Limitations

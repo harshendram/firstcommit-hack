@@ -17,11 +17,27 @@ function bool(v: string | undefined, fallback = false): boolean {
   return ["1", "true", "yes", "on"].includes(v.toLowerCase());
 }
 
-function hasTwilioCreds(): boolean {
-  return Boolean(
-    process.env.TWILIO_ACCOUNT_SID?.trim() &&
-      process.env.TWILIO_AUTH_TOKEN?.trim()
-  );
+/**
+ * Delivery is "live" only when a channel can actually reach a person: a way to
+ * send (Amazon SNS needs just a region; Amazon Connect needs an instance and a
+ * contact flow) *and* somewhere to send to. Without a destination the chain
+ * animates as simulated rather than logging a delivery error per hop, which is
+ * what a fresh checkout should do.
+ */
+function hasDeliveryChannel(): boolean {
+  const canSend =
+    bool(process.env.AWS_SMS_ENABLED, true) ||
+    Boolean(
+      process.env.CONNECT_INSTANCE_ID?.trim() &&
+        process.env.CONNECT_CONTACT_FLOW_ID?.trim()
+    );
+  const hasDestination = [
+    process.env.CONTACT_NEIGHBOUR_PHONE,
+    process.env.CONTACT_SECURITY_PHONE,
+    process.env.CONTACT_FAMILY_PHONE,
+    process.env.CONTACT_EMS_PHONE,
+  ].some((phone) => Boolean(phone?.trim()));
+  return canSend && hasDestination;
 }
 
 const escalationModeEnv = (process.env.ESCALATION_MODE ?? "").toLowerCase();
@@ -30,7 +46,7 @@ const escalationMode: "simulated" | "live" =
     ? "simulated"
     : escalationModeEnv === "live"
       ? "live"
-      : hasTwilioCreds()
+      : hasDeliveryChannel()
         ? "live"
         : "simulated";
 
@@ -53,79 +69,118 @@ function parseCallRoles(): Set<EscalationHop["contact_role"]> {
   return new Set(picked.length > 0 ? picked : ["family"]);
 }
 
+const region = (
+  process.env.AWS_REGION ??
+  process.env.AWS_DEFAULT_REGION ??
+  "us-east-1"
+).trim();
+
 export const config = {
   port: Number(process.env.PORT ?? 3001),
   host: process.env.HOST ?? "0.0.0.0",
-  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-  geminiModel: process.env.GEMINI_LIVE_MODEL ?? "gemini-2.5-flash",
-  sarvamApiKey: process.env.SARVAM_API_KEY ?? "",
-  sarvamSttModel: process.env.SARVAM_STT_MODEL ?? "saaras:v3",
-  sarvamTtsModel: process.env.SARVAM_TTS_MODEL ?? "bulbul:v3",
-  sarvamTtsSpeaker: process.env.SARVAM_TTS_SPEAKER ?? "priya",
+
+  /** Everything the AWS SDK clients need, in one place. */
+  aws: {
+    region,
+    /**
+     * Point every SDK client at a local stack (LocalStack, `sam local`) during
+     * development. Unset in every deployed environment, where the SDK resolves
+     * the real regional endpoint by itself.
+     */
+    endpoint: (process.env.AWS_ENDPOINT_URL ?? "").trim(),
+    /** Adaptive retry sits on top of this; see `aws/clients.ts`. */
+    maxAttempts: Number(process.env.AWS_MAX_ATTEMPTS ?? 4),
+
+    // --- Bedrock -----------------------------------------------------------
+    /**
+     * A cross-region inference profile (the "us." prefix) rather than a bare
+     * model id, so Bedrock itself spreads load across the US regions.
+     */
+    bedrockModelId: process.env.BEDROCK_MODEL_ID ?? "us.amazon.nova-2-lite-v1:0",
+    bedrockRegion: (process.env.BEDROCK_REGION ?? region).trim(),
+    /** Whole-turn failover target when the primary throttles or 5xxs. */
+    bedrockFailoverRegion: (process.env.BEDROCK_FAILOVER_REGION ?? "us-west-2").trim(),
+    bedrockMaxTokens: Number(process.env.BEDROCK_MAX_TOKENS ?? 512),
+
+    // --- Polly / Transcribe ------------------------------------------------
+    /** Kajal covers Hindi and Indian English on one voice. */
+    pollyVoice: process.env.POLLY_VOICE ?? "Kajal",
+    /** generative | neural | standard — generative degrades to neural per region. */
+    pollyEngine: process.env.POLLY_ENGINE ?? "generative",
+
+    // --- Documents ---------------------------------------------------------
+    comprehendMedicalEnabled: bool(process.env.COMPREHEND_MEDICAL_ENABLED, true),
+    /** Needed only for PDFs over Textract's 5 MB synchronous limit. */
+    documentBucket: (process.env.DOCUMENT_BUCKET ?? "").trim(),
+
+    // --- Notifications -----------------------------------------------------
+    smsEnabled: bool(process.env.AWS_SMS_ENABLED, true),
+    /** Alphanumeric sender id, where the destination country supports one. */
+    snsSenderId: (process.env.SNS_SENDER_ID ?? "").trim(),
+    /** Every alert is mirrored here for the on-call subscribers. */
+    opsTopicArn: (process.env.OPS_TOPIC_ARN ?? "").trim(),
+    /** Undeliverable alerts land here instead of disappearing into a log. */
+    notificationDlqUrl: (process.env.NOTIFICATION_DLQ_URL ?? "").trim(),
+    /** Amazon Connect places the outbound emergency call. */
+    connectInstanceId: (process.env.CONNECT_INSTANCE_ID ?? "").trim(),
+    connectContactFlowId: (process.env.CONNECT_CONTACT_FLOW_ID ?? "").trim(),
+    connectSourcePhone: (process.env.CONNECT_SOURCE_PHONE ?? "").trim(),
+    /** Presigned staging for the Polly clip the contact flow plays. */
+    callAudioBucket: (process.env.CALL_AUDIO_BUCKET ?? "").trim(),
+  },
+
   demoLanguage: process.env.DEMO_LANGUAGE ?? "en-IN",
   escalationMode,
-  escalationChannel: (process.env.ESCALATION_CHANNEL ?? "voice") as
-    | "whatsapp"
-    | "sms"
-    | "voice",
+  escalationChannel: (process.env.ESCALATION_CHANNEL ?? "voice") as "sms" | "voice",
   escalationCallRoles: parseCallRoles(),
   escalationAckTimeoutMs: Number(process.env.ESCALATION_ACK_TIMEOUT_MS ?? 45_000),
   escalationHopDelayMs: Number(process.env.ESCALATION_HOP_DELAY_MS ?? 2_000),
-  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
-  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ?? "",
-  /** e.g. whatsapp:+14155238886 (Twilio sandbox) or your approved WhatsApp sender */
-  twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM ?? "",
-  /** E.164 SMS sender, used as fallback or when ESCALATION_CHANNEL=sms */
-  twilioSmsFrom: process.env.TWILIO_SMS_FROM ?? "",
-  /** E.164 voice caller ID — your purchased Twilio number */
-  twilioVoiceFrom: process.env.TWILIO_VOICE_FROM ?? "",
-  /** Twilio TTS voice for the emergency call */
-  twilioVoiceName: process.env.TWILIO_VOICE_NAME ?? "Polly.Raveena",
+
   /** Public web origin for family PWA links in alerts */
   publicWebUrl: (process.env.PUBLIC_WEB_URL ?? "http://localhost:3000").replace(
     /\/$/,
     ""
   ),
   /**
-   * Public https origin of THIS backend (ngrok). Required for keypad
-   * acknowledgement during voice calls; without it the call still plays
-   * the alert but cannot capture "press 1". Auto-filled at boot when
-   * NGROK_AUTHTOKEN is present.
+   * Public https origin of this API. In the deployed stack this is the Amazon
+   * API Gateway URL, which is where the Amazon Connect contact flow posts the
+   * "press 1" acknowledgement. Only needed locally if you want that callback to
+   * reach your laptop.
    */
   publicApiUrl: (process.env.PUBLIC_API_URL ?? "").replace(/\/$/, ""),
-  /** Set to open an ngrok tunnel automatically on boot */
-  ngrokAuthtoken: process.env.NGROK_AUTHTOKEN ?? "",
-  /** Point the Twilio number's inbound SMS webhook at the tunnel on boot */
-  twilioSyncWebhooks: bool(process.env.TWILIO_SYNC_WEBHOOKS, true),
+
   contactPhones: {
     neighbour: process.env.CONTACT_NEIGHBOUR_PHONE ?? "",
     security: process.env.CONTACT_SECURITY_PHONE ?? "",
     family: process.env.CONTACT_FAMILY_PHONE ?? "",
     emergency_services: process.env.CONTACT_EMS_PHONE ?? "",
   } as Record<EscalationHop["contact_role"], string>,
+
   /**
-   * LLM backend: sarvam | gemini | mock
-   * Defaults: mock when USE_MOCK_AI=true, otherwise sarvam (avoids Gemini 429s).
+   * Reasoning backend: bedrock (default) or offline.
+   * `offline` is the deterministic client used by CI and no-network rehearsals.
    */
   llmProvider: (() => {
     const raw = (process.env.LLM_PROVIDER ?? "").toLowerCase();
-    if (raw === "sarvam" || raw === "gemini" || raw === "mock") return raw;
-    return bool(process.env.USE_MOCK_AI, false) ? "mock" : "sarvam";
-  })() as "sarvam" | "gemini" | "mock",
-  sarvamLlmModel: process.env.SARVAM_LLM_MODEL ?? "sarvam-105b",
-  /** Legacy flag — forces mock LLM if LLM_PROVIDER unset */
-  useMockAi: bool(process.env.USE_MOCK_AI, false),
+    if (raw === "bedrock" || raw === "offline") return raw;
+    return bool(process.env.OFFLINE_AI, false) ? "offline" : "bedrock";
+  })() as "bedrock" | "offline",
+  useOfflineAi: bool(process.env.OFFLINE_AI, false),
   /**
-   * Silent STT/TTS only when explicitly requested. Keep speech LIVE whenever
-   * SARVAM_API_KEY is set so the watch can talk even if the LLM is mocked.
+   * Silent STT/TTS only when explicitly requested. Keep speech live so the watch
+   * can still talk when the reasoning layer is offline.
    */
-  useMockSpeech: bool(process.env.USE_MOCK_SPEECH, false),
+  useOfflineSpeech: bool(process.env.OFFLINE_SPEECH, false),
+
   /**
-   * Supabase (or any Postgres) connection URI.
-   * Project Settings → Database → URI. Prefer pooler port 6543 in production.
+   * Postgres connection URI. In the deployed stack this is Amazon Aurora
+   * Serverless v2 (PostgreSQL), reached inside the VPC with the password held
+   * in AWS Secrets Manager.
    */
   databaseUrl: (process.env.DATABASE_URL ?? "").trim(),
-  /** JWT signing secret for username/password login */
+  /** Secrets Manager id holding the Aurora credentials, when DATABASE_URL is unset. */
+  databaseSecretId: (process.env.DATABASE_SECRET_ID ?? "").trim(),
+  /** JWT signing secret — Amazon Cognito issues the tokens in the deployed stack. */
   authSecret:
     process.env.AUTH_SECRET?.trim() ||
     "rakshak-dev-secret-change-in-production",

@@ -107,7 +107,42 @@ export const ALLY_SERVICES = [
     service: "Amazon Transcribe",
     icon: "transcribe.svg",
     title: "Hear her words",
-    body: "Spoken answers become text the agent can reason over.",
+    body: "Streaming speech recognition that picks Hindi or English per clip, so code-mix just works.",
+  },
+  {
+    id: "textract",
+    service: "Amazon Textract",
+    icon: "textract.svg",
+    title: "Read the paperwork",
+    body: "A discharge summary becomes structured care context instead of a scanned page nobody opens.",
+  },
+  {
+    id: "comprehend-medical",
+    service: "Amazon Comprehend Medical",
+    icon: "comprehend-medical.svg",
+    title: "Name the medicines",
+    body: "Pulls medications, dosages and conditions out of that text so follow-ups are grounded.",
+  },
+  {
+    id: "sns",
+    service: "Amazon SNS",
+    icon: "sns.svg",
+    title: "Tell the family",
+    body: "One transactional message to the person who should hear it, mirrored to the on-call topic.",
+  },
+  {
+    id: "connect",
+    service: "Amazon Connect",
+    icon: "connect.svg",
+    title: "Make the call",
+    body: "When a message is not enough, a phone rings — and pressing 1 reaches the conversation.",
+  },
+  {
+    id: "s3",
+    service: "Amazon S3",
+    icon: "s3.svg",
+    title: "Hold it briefly",
+    body: "Documents and call audio, encrypted, presigned, and expired on a lifecycle rule.",
   },
 ] as const;
 

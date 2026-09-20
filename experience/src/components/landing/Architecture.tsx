@@ -23,7 +23,7 @@ const LAYERS = [
   },
   {
     name: "Companion Agent",
-    detail: "Hindi + English voice · Sarvam STT · Polly Kajal",
+    detail: "Hindi + English voice · Amazon Transcribe · Amazon Polly Kajal",
     role: "The only agent Amma perceives",
   },
   {

@@ -6,7 +6,7 @@ import { remindPatientForCheckIn } from "../care/notify.js";
 import { careStore } from "../care/store.js";
 import { getTts } from "../care/ttsCache.js";
 import { digitiseDischargePdf } from "../services/documentDigitisation.js";
-import { twilioNotifier } from "../services/twilio.js";
+import { notifier } from "../services/notifications.js";
 import { config } from "../config.js";
 
 export const careRouter = Router();
@@ -72,7 +72,7 @@ careRouter.get("/session", (_req, res) => {
   res.json(careOrchestrator.getSession());
 });
 
-/** Upload discharge summary PDF → Sarvam digitisation → stored on patient profile. */
+/** Upload discharge summary PDF → Textract + Comprehend Medical → stored on patient profile. */
 careRouter.post("/discharge/upload", upload.single("file"), async (req, res) => {
   const file = req.file;
   if (!file?.buffer?.length) {
@@ -148,7 +148,7 @@ careRouter.post("/reset", (_req, res) => {
   res.json({ ok: true, view: careOrchestrator.getDoctorView() });
 });
 
-/** Ally SNS fallback — send Twilio WhatsApp/SMS when AWS SNS isn't configured. */
+/** Direct SMS out of the Ally check-in flow, via Amazon SNS. */
 careRouter.post("/notify-demo", async (req, res) => {
   const message = String(req.body?.message ?? "").trim();
   const phone = config.contactPhones.family;
@@ -156,18 +156,18 @@ careRouter.post("/notify-demo", async (req, res) => {
     res.status(400).json({ ok: false, channel: "log", error: "empty message" });
     return;
   }
-  if (!phone || !twilioNotifier.ready) {
+  if (!phone || !notifier.ready) {
     console.log("[ally-notify-fallback]", message);
     res.json({
       ok: true,
       channel: "log",
       message,
-      reason: phone ? "twilio not configured" : "no CONTACT_FAMILY_PHONE",
+      reason: phone ? "no AWS delivery channel configured" : "no CONTACT_FAMILY_PHONE",
     });
     return;
   }
   try {
-    const result = await twilioNotifier.sendWhatsAppAlert(phone, message);
+    const result = await notifier.sendSmsAlert(phone, message);
     console.log(
       result.ok
         ? `[ally-notify] ${result.channel} sent`
@@ -176,13 +176,13 @@ careRouter.post("/notify-demo", async (req, res) => {
     res.json({
       ok: result.ok,
       channel: result.channel,
-      sid: result.sid,
+      id: result.id,
       message,
       error: result.error,
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error("[ally-notify]", error);
-    res.status(502).json({ ok: false, channel: "twilio", error, message });
+    res.status(502).json({ ok: false, channel: "sns", error, message });
   }
 });

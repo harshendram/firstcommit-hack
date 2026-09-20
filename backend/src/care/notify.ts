@@ -1,7 +1,7 @@
 import type { CheckIn, PatientProfile, SymptomScores } from "./types.js";
 import { SYMPTOM_LABELS } from "./types.js";
 import { config } from "../config.js";
-import { twilioNotifier, type NotifyResult } from "../services/twilio.js";
+import { notifier, type NotifyResult } from "../services/notifications.js";
 
 /** Falls back to the demo contact so a single configured number works. */
 function patientPhone(): string {
@@ -43,7 +43,7 @@ function settleResults(
       ? result.value
       : {
           ok: false,
-          channel: index === 0 ? "whatsapp" : "voice",
+          channel: index === 0 ? "sms" : "voice",
           error:
             result.reason instanceof Error
               ? result.reason.message
@@ -78,14 +78,14 @@ export async function remindPatientForCheckIn(
   const body = `Namaste ${name} — Rakshak. Aaj ka recovery check-in ready hai. Watch / app par Check in dabaiye.`;
 
   const settled = await Promise.allSettled([
-    twilioNotifier.sendWhatsAppAlert(phone, body),
-    twilioNotifier.callWithScript(phone, script),
+    notifier.sendSmsAlert(phone, body),
+    notifier.callWithScript(phone, script),
   ]);
   return settleResults(settled, "daily reminder");
 }
 
 /**
- * Amber: a single non-urgent WhatsApp to the doctor. No voice call — the point
+ * Amber: a single non-urgent SMS to the doctor. No voice call — the point
  * is a reviewable note lands out-of-band, not that a phone rings for a drift.
  * Green still stays completely silent.
  */
@@ -111,7 +111,7 @@ export async function notifyDoctorReview(
   ].join("\n");
 
   try {
-    const result = await twilioNotifier.sendWhatsAppAlert(phone, body);
+    const result = await notifier.sendSmsAlert(phone, body);
     console.log(
       result.ok
         ? `[care] doctor review ${result.channel} sent`
@@ -154,7 +154,7 @@ export async function notifyDoctorUrgent(
     `Possible surgical site infection. Please check the dashboard or call her.`,
   ].join("\n");
 
-  // Spoken: calm, short, no jargon. Bulbul will read this as-is.
+  // Spoken: calm, short, no jargon. Polly reads this as-is.
   const voiceScript = [
     `Hello. This is Rakshak.`,
     `${name} needs you today.`,
@@ -163,8 +163,8 @@ export async function notifyDoctorUrgent(
   ].join(" ");
 
   const settled = await Promise.allSettled([
-    twilioNotifier.sendWhatsAppAlert(phone, body),
-    twilioNotifier.callWithScript(phone, voiceScript),
+    notifier.sendSmsAlert(phone, body),
+    notifier.callWithScript(phone, voiceScript),
   ]);
 
   return settleResults(settled, "urgent doctor");

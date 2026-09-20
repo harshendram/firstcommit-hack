@@ -6,9 +6,9 @@ This is an implementation spec, not a pitch doc. Build against this directly. Wh
 
 ## 0. What we're building, in one paragraph
 
-An AI First Responder. A trigger (manual tap, spoken distress, simulated fall) opens a live voice conversation with a patient, conducted in their spoken language via Sarvam STT/TTS, reasoned over by Gemini Live. The AI triages, **stays in conversation with the patient reassuring them through the entire escalation process** (does not go silent once it decides to escalate), generates a structured emergency handoff, and works through an escalation chain of contacts. A real-time **Command Center dashboard** mirrors the entire event as it unfolds, for anyone watching who isn't holding the watch.
+An AI First Responder. A trigger (manual tap, spoken distress, simulated fall) opens a live voice conversation with a patient, conducted in their spoken language via Amazon Transcribe and Amazon Polly, reasoned over by Amazon Bedrock. The AI triages, **stays in conversation with the patient reassuring them through the entire escalation process** (does not go silent once it decides to escalate), generates a structured emergency handoff, and works through an escalation chain of contacts. A real-time **Command Center dashboard** mirrors the entire event as it unfolds, for anyone watching who isn't holding the watch.
 
-Build order: **orchestrator backend → dashboard → Gemini/Sarvam integration → trigger simulator (web button first) → real watch integration last, if time remains.** The watch is not the critical path. Don't let it become one.
+Build order: **orchestrator backend → dashboard → AWS voice + reasoning integration → trigger simulator (web button first) → real watch integration last, if time remains.** The watch is not the critical path. Don't let it become one.
 
 ---
 
@@ -21,22 +21,22 @@ IDLE
   │  trigger fires (manual_tap | voice_distress | simulated_fall)
   ▼
 LISTENING
-  │  Sarvam STT streaming session opens, greeting played via TTS
+  │  Amazon Transcribe streaming session opens, greeting played via Polly
   ▼
 TRIAGING
-  │  Gemini Live reasoning over the live conversation
-  │  loop: patient speaks → STT → Gemini turn → TTS response
-  │  Gemini calls assess() after each turn with a running severity level
+  │  Amazon Bedrock reasoning over the live conversation
+  │  loop: patient speaks → Transcribe → Bedrock turn → Polly response
+  │  the agent calls assess() after each turn with a running severity level
   ▼
   ├── LOW severity → REASSURING (stay in conversation, no escalation, offer to end call)
   │
   └── MEDIUM/HIGH severity →
         ▼
       HANDOFF_GENERATED
-        │  Gemini calls generate_handoff() → structured block produced
+        │  the agent calls generate_handoff() → structured block produced
         ▼
       ESCALATING
-        │  Gemini calls escalate() → contact chain begins
+        │  the agent calls escalate() → contact chain begins
         │  *** conversation with patient DOES NOT STOP HERE ***
         │  AI switches tone: "I've messaged your daughter, she's on the way,
         │  I'm staying right here with you" — keeps listening, keeps responding
@@ -50,32 +50,33 @@ TRIAGING
            AI signs off: "Your daughter's here now. I'm glad you're okay."
 ```
 
-**Why this matters more than it looks:** the old version of this product ended at `HANDOFF_GENERATED`. The state machine above is what makes "stay with the patient" a real behavior instead of a nice line in the pitch — `ESCALATING` and `AWAITING_HANDOVER` are conversation states, not just backend statuses. Gemini's system prompt (Section 4) must know it's still on an active call during these states.
+**Why this matters more than it looks:** the old version of this product ended at `HANDOFF_GENERATED`. The state machine above is what makes "stay with the patient" a real behavior instead of a nice line in the pitch — `ESCALATING` and `AWAITING_HANDOVER` are conversation states, not just backend statuses. The system prompt (Section 4) must know it's still on an active call during these states.
 
 ---
 
 ## 2. System architecture
 
 ```
-┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│  Trigger source  │────▶│   Orchestrator (BE)   │────▶│  Command Center  │
-│  - web button     │     │   - state machine      │     │  Dashboard (FE)  │
-│  - voice phrase   │     │   - Sarvam STT/TTS      │     │  - live transcript│
-│  - watch (later)  │     │   - Gemini Live client  │     │  - patient state  │
-└─────────────────┘     │   - escalation service  │     │  - AI assessment   │
-                          └──────────────────────┘     │  - timeline        │
-                                    │                    │  - handoff card    │
-                                    │  WebSocket push      │  - escalation      │
-                                    ▼                    │    progress        │
-                          ┌──────────────────────┐     └─────────────────┘
-                          │  Escalation targets    │
-                          │  (WhatsApp/Twilio,     │
-                          │   simulated for demo)  │
-                          └──────────────────────┘
+┌─────────────────┐     ┌──────────────────────────┐     ┌─────────────────┐
+│  Trigger source  │────▶│   Orchestrator (BE)      │────▶│  Command Center  │
+│  - web button     │     │   - state machine         │     │  Dashboard (FE)  │
+│  - voice phrase   │     │   - Amazon Transcribe STT │     │  - live transcript│
+│  - watch (later)  │     │   - Amazon Polly TTS      │     │  - patient state  │
+└─────────────────┘     │   - Amazon Bedrock agent  │     │  - AI assessment   │
+                          │   - escalation service    │     │  - timeline        │
+                          └──────────────────────────┘     │  - handoff card    │
+                                    │                    │  - escalation      │
+                                    │  WebSocket push      │    progress        │
+                                    ▼                    └─────────────────┘
+                          ┌──────────────────────────┐
+                          │  Escalation targets       │
+                          │  Amazon SNS (SMS)         │
+                          │  Amazon Connect (voice)   │
+                          └──────────────────────────┘
 ```
 
 **Recommended stack** (optimize for what you and your team already know; this is a default, not a mandate):
-- **Backend/orchestrator:** Node.js (TypeScript) or Python (FastAPI) — whichever your team is faster in. Needs to hold: the state machine, a Gemini Live WebSocket client, a Sarvam streaming STT/TTS client, and a WebSocket server pushing state to the dashboard.
+- **Backend/orchestrator:** Node.js (TypeScript) or Python (FastAPI) — whichever your team is faster in. Needs to hold: the state machine, an Amazon Bedrock client, Amazon Transcribe streaming and Amazon Polly clients, and a WebSocket server pushing state to the dashboard.
 - **Dashboard:** React + WebSocket client, single page. Keep it a single artifact-style page — don't build routing/auth/multi-page infra you don't need.
 - **Trigger simulator:** literally a page/button that POSTs `{trigger_type: "manual_tap" | "voice_distress" | "simulated_fall"}` to the orchestrator. This is your primary demo trigger. Build this before touching the watch.
 - **Realtime transport:** one WebSocket connection between backend and dashboard, pushing state-machine transitions and transcript deltas as they happen. Don't poll.
@@ -97,7 +98,7 @@ type Severity = "low" | "medium" | "high";
 
 interface ConversationTurn {
   speaker: "patient" | "ai";
-  text: string;               // transcript, from Sarvam STT or Gemini output transcription
+  text: string;               // transcript, from Amazon Transcribe or the agent's own reply
   timestamp: string;          // ISO 8601
   language: string;           // e.g. "kn-IN"
 }
@@ -139,14 +140,15 @@ interface SessionEvent {
 
 ---
 
-## 4. Gemini Live integration
+## 4. Amazon Bedrock integration
 
-**Model:** `gemini-3.1-flash-live-preview` (or current live-audio model — check availability at build time).
-**Connection:** WebSocket, server-to-server from your orchestrator. Use an ephemeral token, not a raw API key, if the orchestrator has any client-facing surface.
-**Response modality:** `AUDIO`, with output transcription enabled so you get text for the dashboard without a separate STT pass on Gemini's own output.
-**Thinking config:** keep `thinking_level` at `low`/`minimal` — this is a latency-sensitive conversational use case, not a deep-reasoning one.
+**Model:** Amazon Nova, through a cross-region inference profile (`us.amazon.nova-2-lite-v1:0`), so Bedrock spreads load across the US regions on its own.
+**API:** the **Converse** API. One request shape across every Bedrock model, and first-class tool use — the agent calls the tools below and we read structured arguments instead of parsing prose.
+**Credentials:** the standard AWS chain. An IAM role when deployed, `aws configure` or SSO locally. There is no API key to leak, and no ephemeral-token dance even where the orchestrator faces a client.
+**Inference config:** `maxTokens` around 512 and `temperature` 0.3. This is a latency-sensitive conversational use case, not a deep-reasoning one.
+**Failure handling:** a turn that fails with a region-shaped error (throttle, 5xx, model-not-ready) is retried whole in `BEDROCK_FAILOVER_REGION`. Past that the API returns an explicit error — nothing invents a reply. See `docs/RESILIENCE.md`.
 
-### Function declarations to register
+### Tools to register (Converse `toolConfig`)
 
 ```
 assess(severity: "low" | "medium" | "high", reasoning: string)
@@ -196,15 +198,16 @@ sentences unless the patient asks for detail. Speak naturally in whatever
 language the patient is using; do not switch to English unless they do.
 ```
 
-Iterate on this prompt against scripted test inputs (mild dizziness, "I fell and can't get up," chest pain, confusion/rambling) before wiring it to real audio — text-mode testing first is much faster to iterate on than full audio round trips.
+Iterate on this prompt against scripted test inputs (mild dizziness, "I fell and can't get up," chest pain, confusion/rambling) before wiring it to real audio — text-mode testing first is much faster to iterate on than full audio round trips. `LLM_PROVIDER=offline` runs the same cases deterministically in CI.
 
 ---
 
-## 5. Sarvam integration
+## 5. Voice integration — Amazon Transcribe + Amazon Polly
 
-- **STT:** Saaras v3, Streaming API over WebSocket, `pcm_s16le` or `pcm_raw` audio. This is telephony-tuned — good fit for a phone/watch mic. Enable VAD for turn-taking and barge-in.
-- **TTS:** Bulbul v3. Pick one demo voice and one demo language up front (e.g. Kannada) and don't generalize beyond it until the core loop is solid. Consider a Pronunciation Dictionary if family/medical terms are being mispronounced.
-- **Where Sarvam sits vs. Gemini's own audio:** Gemini Live can technically do native multilingual audio itself. Use Sarvam anyway for STT/TTS — it's the whole reason the product feels native rather than translated, and it's the stack this event is built around. Don't let Gemini's native audio quietly replace Sarvam's role; keep the division of labor from the architecture doc (Gemini reasons, Sarvam speaks/listens).
+- **STT:** Amazon Transcribe **streaming**, `pcm` encoding at 16 kHz mono. The browser recorder (`web/src/lib/recordWav.ts`) and the Wear OS `AudioBridge` both emit exactly that, so there is no transcode step between the mic and the transcript.
+- **Language identification:** turn on `IdentifyLanguage` with `LanguageOptions` of `en-IN,hi-IN` and `PreferredLanguage` set to the patient's profile language. This is the whole reason a Hinglish sentence works without asking the patient to pick a language first. Transcribe reports the language of the *audio*; the text itself is the better signal for code-mix, so the transcript is re-checked against a code-mix heuristic before the reply language is chosen.
+- **TTS:** Amazon Polly, voice **Kajal**, `generative` engine. Kajal covers Hindi and Indian English on one voice, so a code-mix reply does not need voice switching mid-sentence. The generative engine is not in every region — an `EngineNotSupportedException` retries on `neural`, logged rather than hidden.
+- **Division of labour:** Bedrock reasons, Transcribe listens, Polly speaks. Keep it that way. Resist folding transcription into the reasoning call: separate services mean a sick STT degrades the check-in to text chips instead of taking the whole turn down with it.
 
 ---
 
@@ -247,8 +250,8 @@ This is not a debug panel. It needs to look like a product, because judges will 
 
 ## 7. Explicitly out of scope — do not build these
 
-- Prescription OCR / Sarvam Vision integration. Hardcode `medical_history` and `medications` as test data for the demo patient. Mention it as roadmap in the pitch, don't build it.
-- Real ambulance/emergency-services dispatch to 108/911. The `emergency_services` hop sends a Twilio WhatsApp/SMS alert to a demo number you configure — it does **not** place a real emergency call.
+- Prescription OCR beyond the discharge-summary path. Hardcode `medical_history` and `medications` as test data for the demo patient. (Discharge PDFs *are* handled — Amazon Textract plus Amazon Comprehend Medical — but don't widen that to arbitrary prescriptions.)
+- Real ambulance/emergency-services dispatch to 108/911. The `emergency_services` hop sends an Amazon SNS SMS to a demo number you configure — it does **not** place a real emergency call.
 - Multi-language support beyond one demo language.
 - User accounts, auth, persistent storage beyond the current session, historical dashboards.
 - Live interpreter mode (patient↔doctor↔family three-way translation) — genuinely good idea, but only attempt this after Sections 1–6 are fully working and demo-rehearsed. Treat it as a separate, optional build task, not part of this spec's critical path.
@@ -260,10 +263,10 @@ This is not a debug panel. It needs to look like a product, because judges will 
 
 - [ ] Orchestrator skeleton with the state machine (Section 1), no AI wired in yet — just trigger → state transitions, testable via the web trigger button
 - [ ] WebSocket push from orchestrator to a placeholder dashboard, confirm real-time updates work end to end
-- [ ] Gemini Live connection, text-mode first, function calling wired to state machine transitions
-- [ ] Swap text-mode for full audio, wire in Sarvam STT + TTS
+- [ ] Amazon Bedrock Converse connection, text-mode first, tool use wired to state machine transitions
+- [ ] Swap text-mode for full audio, wire in Amazon Transcribe streaming + Amazon Polly
 - [ ] Dashboard built out to the full spec in Section 6, connected to real session data
-- [ ] Escalation chain logic + simulated WhatsApp/Twilio sends
+- [ ] Escalation chain logic + simulated Amazon SNS / Amazon Connect sends
 - [ ] "Stay with the patient" behavior explicitly tested — confirm the AI keeps talking through ESCALATING/AWAITING_HANDOVER rather than going silent
 - [ ] Latency pass: measure round-trip time at each hop, cut wherever possible (see latency notes in the planning doc)
 - [ ] Full run-throughs with the web trigger button, 10+ times, timed
@@ -274,13 +277,13 @@ This is not a debug panel. It needs to look like a product, because judges will 
 ## 9. Config / environment
 
 ```
-GEMINI_API_KEY=            # or ephemeral token flow if orchestrator is client-facing
-GEMINI_LIVE_MODEL=gemini-3.1-flash-live-preview
-SARVAM_API_KEY=
-SARVAM_STT_MODEL=saaras:v3
-SARVAM_TTS_MODEL=bulbul:v3
+AWS_REGION=us-east-1       # credentials come from the standard chain — no API keys
+BEDROCK_MODEL_ID=us.amazon.nova-2-lite-v1:0
+BEDROCK_FAILOVER_REGION=us-west-2
+POLLY_VOICE=Kajal
+POLLY_ENGINE=generative
 DEMO_LANGUAGE=kn-IN         # pick one, don't generalize early
-ESCALATION_MODE=simulated   # vs "live" if real WhatsApp/Twilio wired up
+ESCALATION_MODE=simulated   # vs "live" once Amazon SNS / Amazon Connect are wired up
 ```
 
 ---

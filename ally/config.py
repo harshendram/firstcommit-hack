@@ -44,12 +44,12 @@ COGNITO_CLIENT_ID = _s("COGNITO_CLIENT_ID")
 
 POLLY_VOICE = _s("ALLY_POLLY_VOICE", "Kajal")
 POLLY_ENGINE = _s("ALLY_POLLY_ENGINE", "generative")
-# Speech-to-text provider: "sarvam" (Saaras, best for Hinglish/Indic code-mix) or "transcribe".
-STT_PROVIDER = _s("ALLY_STT_PROVIDER", "sarvam")
-SARVAM_STT_MODEL = _s("SARVAM_STT_MODEL", "saaras:v3")
-SARVAM_STT_MODE = _s("SARVAM_STT_MODE", "transcribe")  # transcribe | codemix | translit | verbatim
 # "identify" lets Transcribe pick en-IN/hi-IN per clip; "fixed" uses the parent's language.
 TRANSCRIBE_MODE = _s("ALLY_TRANSCRIBE_MODE", "identify")
+
+# Second region for the same Bedrock model. A turn that fails on a throttle or a
+# 5xx in the primary region is retried here before Ally reports llm_unavailable.
+BEDROCK_FAILOVER_REGION = _s("BEDROCK_FAILOVER_REGION", "us-west-2")
 
 VAPID_SUBJECT = _s("ALLY_VAPID_SUBJECT", "mailto:team@ally.care")
 PUBLIC_WEB_URL = _s("PUBLIC_WEB_URL", "http://localhost:3000")

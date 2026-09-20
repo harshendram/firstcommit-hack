@@ -5,7 +5,7 @@ let ready = false;
 export async function ensureSchema(): Promise<void> {
   if (!dbConfigured()) {
     console.warn(
-      "[db] DATABASE_URL unset — user traction (name+email) is disabled until Supabase is configured"
+      "[db] DATABASE_URL unset — user traction (name+email) is disabled until Aurora is configured"
     );
     return;
   }
@@ -64,7 +64,7 @@ export async function ensureSchema(): Promise<void> {
     );
   `);
   ready = true;
-  console.log("[db] Supabase schema ready (users, checkin_runs, patient_profiles)");
+  console.log("[db] Aurora schema ready (users, checkin_runs, patient_profiles)");
 }
 
 export function schemaReady(): boolean {

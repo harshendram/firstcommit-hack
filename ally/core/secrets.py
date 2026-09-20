@@ -2,7 +2,7 @@
 
 One JSON secret holds every value (cheaper and atomic to rotate):
     {"vapid_public_key": "...", "vapid_private_key": "...", "device_key": "...",
-     "hmac_secret": "...", "sarvam_api_key": "..."}
+     "hmac_secret": "..."}
 """
 
 from __future__ import annotations

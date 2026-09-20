@@ -1,6 +1,6 @@
 /**
  * Language helpers for the live voice path.
- * Sarvam STT/TTS use BCP-47 tags like hi-IN / en-IN.
+ * Amazon Transcribe and Polly use BCP-47 tags like hi-IN / en-IN.
  */
 
 const TTS_SUPPORTED = new Set([
@@ -36,7 +36,7 @@ export function normalizeLanguageCode(
 ): string {
   if (!raw?.trim()) return fallback;
   let code = raw.trim().replace(/_/g, "-");
-  // Sarvam sometimes returns "hi" / "en" / "hi_in"
+  // Upstream tags arrive as "hi" / "en" / "hi_in" too
   if (!code.includes("-")) {
     const base = code.toLowerCase();
     const map: Record<string, string> = {
@@ -100,7 +100,7 @@ export function detectLanguageFromText(
 }
 
 /**
- * Bulbul language for TTS. Code-mix / Hinglish → hi-IN so Indic words
+ * Polly language for TTS. Code-mix / Hinglish → hi-IN so Indic words
  * pronounce correctly; pure English stays en-IN.
  */
 export function resolveTtsLanguage(

@@ -32,8 +32,15 @@ Order matters for cycling (`pickService(mats, i)` uses `i % length`):
 5. AWS Step Functions — `stepfunctions.svg`  
 6. Amazon Polly — `polly.svg`  
 7. Amazon Transcribe — `transcribe.svg`  
+8. Amazon Textract — `textract.svg`  
+9. Amazon Comprehend Medical — `comprehend-medical.svg`  
+10. Amazon SNS — `sns.svg`  
+11. Amazon Connect — `connect.svg`  
+12. Amazon S3 — `s3.svg`  
 
-Lambda / Bedrock / DynamoDB / Step Functions icons were copied in the official Architecture Icons style earlier. Polly / Transcribe / Nova may be simplified local SVGs with correct names and brand-adjacent colors. Prefer swapping in official icons later without changing labels or `ALLY_SERVICES` ids.
+Lambda / Bedrock / DynamoDB / Step Functions icons were copied in the official Architecture Icons style earlier. The rest are simplified local SVGs with correct names and brand-adjacent colors (teal for the ML services, pink for the messaging ones, green for storage). Prefer swapping in official icons later without changing labels or `ALLY_SERVICES` ids.
+
+This is the subset the gallery shows, chosen because each one is visible in the story a visitor walks through. The full service map — 17 services, 63 CloudFormation resources — is in [`docs/AWS-ARCHITECTURE.md`](../../docs/AWS-ARCHITECTURE.md).
 
 ## Wall grouping and plaques — measured, never typed
 

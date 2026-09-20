@@ -388,7 +388,7 @@ const pool = new pg.Pool({
 
 const lines = [
   "Rakshak friend logins",
-  "URL: https://rakshak-alpha-lake.vercel.app/checkin",
+  "URL: https://main.d2dqtm6sqego9a.amplifyapp.com/checkin",
   "",
   "username | password | name | email",
   "---------|----------|------|------",

@@ -31,7 +31,7 @@ uvicorn app:app --reload --port 8001
 Health check: [http://127.0.0.1:8001/health](http://127.0.0.1:8001/health)
 
 CORS is open for `localhost:3000` / `:3001` / `:5173` and
-`https://rakshak-alpha-lake.vercel.app`. Add more origins with a comma-separated
+`https://main.d2dqtm6sqego9a.amplifyapp.com`. Add more origins with a comma-separated
 `CORS_ORIGINS` env var.
 
 ## Curl examples

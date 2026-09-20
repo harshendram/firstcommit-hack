@@ -21,7 +21,7 @@ apiRouter.get("/traction", async (_req, res) => {
   if (!dbConfigured() || !schemaReady()) {
     res.status(503).json({
       error:
-        "Database unavailable — set DATABASE_URL to your Supabase Postgres URI",
+        "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint",
       users: 0,
       completed_checkins: 0,
       started_checkins: 0,

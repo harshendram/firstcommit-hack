@@ -1,6 +1,10 @@
 import dns from "node:dns";
-import dnsPromises from "node:dns/promises";
 import pg from "pg";
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from "@aws-sdk/client-secrets-manager";
+import { awsBase } from "../aws/clients.js";
 import { config } from "../config.js";
 
 dns.setDefaultResultOrder("ipv4first");
@@ -10,84 +14,92 @@ const { Pool } = pg;
 let pool: pg.Pool | null = null;
 
 export function dbConfigured(): boolean {
-  return Boolean(config.databaseUrl);
+  return Boolean(config.databaseUrl || config.databaseSecretId);
+}
+
+/** The shape RDS writes when it manages a master-user secret. */
+interface AuroraSecret {
+  username: string;
+  password: string;
+  host?: string;
+  port?: number;
+  dbname?: string;
+  engine?: string;
 }
 
 /**
- * Build pool options. Supabase `db.<ref>.supabase.co` is often AAAA-only;
- * Node on Windows can throw ENOTFOUND for that — resolve IPv6 and set TLS
- * servername so SSL still validates the hostname.
+ * Credentials for Amazon Aurora Serverless v2 (PostgreSQL).
+ *
+ * Preferred path is `DATABASE_SECRET_ID`: RDS owns the password, rotates it on a
+ * schedule, and nothing in the repo or the task definition ever holds it. A
+ * plain `DATABASE_URL` still works for local development.
  */
-async function poolConfig(): Promise<pg.PoolConfig> {
-  const connectionString = config.databaseUrl;
-  if (!connectionString) {
-    throw new Error(
-      "DATABASE_URL is not set — add your Supabase Postgres URI to .env"
+async function resolveConnection(): Promise<pg.PoolConfig> {
+  if (config.databaseSecretId) {
+    const client = new SecretsManagerClient(awsBase());
+    const res = await client.send(
+      new GetSecretValueCommand({ SecretId: config.databaseSecretId })
     );
+    const secret = JSON.parse(res.SecretString ?? "{}") as AuroraSecret;
+    if (!secret.username || !secret.password) {
+      throw new Error(
+        `Secret ${config.databaseSecretId} has no username/password — is it an RDS-managed secret?`
+      );
+    }
+    const host = secret.host ?? process.env.DATABASE_HOST ?? "";
+    if (!host) {
+      throw new Error(
+        "Aurora endpoint unknown — the secret has no host and DATABASE_HOST is unset"
+      );
+    }
+    console.log(`[db] Aurora credentials from Secrets Manager · ${host}`);
+    return {
+      host,
+      port: secret.port ?? 5432,
+      user: secret.username,
+      password: secret.password,
+      database: secret.dbname ?? "rakshak",
+    };
   }
 
-  const base: pg.PoolConfig = {
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-    max: 5,
+  if (!config.databaseUrl) {
+    throw new Error(
+      "DATABASE_URL is not set — add the Aurora Serverless v2 (PostgreSQL) endpoint to .env"
+    );
+  }
+  return { connectionString: config.databaseUrl };
+}
+
+async function poolConfig(): Promise<pg.PoolConfig> {
+  return {
+    ...(await resolveConnection()),
+    // Aurora terminates TLS with an Amazon RDS certificate. `rejectUnauthorized`
+    // stays false so the demo works without shipping the RDS CA bundle; set
+    // DATABASE_CA to the bundle path to verify it properly.
+    ssl: process.env.DATABASE_CA
+      ? { ca: process.env.DATABASE_CA, rejectUnauthorized: true }
+      : { rejectUnauthorized: false },
+    // Aurora Serverless v2 scales capacity, not the connection ceiling — keep the
+    // per-task pool small so many tasks can share one writer.
+    max: Number(process.env.DATABASE_POOL_MAX ?? 5),
+    idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
   };
-
-  try {
-    const normalized = connectionString.replace(/^postgresql:/i, "http:");
-    const u = new URL(normalized);
-    if (!u.hostname.startsWith("db.") || !u.hostname.endsWith(".supabase.co")) {
-      return base;
-    }
-
-    let address: string | undefined;
-    let family: number | undefined;
-    try {
-      const looked = await dnsPromises.lookup(u.hostname, { verbatim: true });
-      address = looked.address;
-      family = looked.family;
-    } catch {
-      try {
-        const v6 = await dnsPromises.resolve6(u.hostname);
-        address = v6[0];
-        family = 6;
-      } catch {
-        /* fall through to connectionString — may work on hosts with working IPv6 */
-      }
-    }
-
-    if (family !== 6 || !address) return base;
-
-    console.log(`[db] using IPv6 ${address} for ${u.hostname}`);
-    return {
-      host: address,
-      port: Number(u.port || 5432),
-      user: decodeURIComponent(u.username),
-      password: decodeURIComponent(u.password),
-      database: decodeURIComponent(u.pathname.replace(/^\//, "")) || "postgres",
-      ssl: { rejectUnauthorized: false, servername: u.hostname },
-      max: 5,
-      connectionTimeoutMillis: 15_000,
-    };
-  } catch (err) {
-    console.warn(
-      "[db] IPv6 resolve fallback skipped:",
-      err instanceof Error ? err.message : err
-    );
-    return base;
-  }
 }
 
 export async function getPool(): Promise<pg.Pool> {
-  if (!config.databaseUrl) {
+  if (!dbConfigured()) {
     throw new Error(
-      "DATABASE_URL is not set — add your Supabase Postgres URI to .env"
+      "DATABASE_URL is not set — add the Aurora Serverless v2 (PostgreSQL) endpoint to .env"
     );
   }
   if (!pool) {
     pool = new Pool(await poolConfig());
     pool.on("error", (err) => {
+      // A failover promotes the reader; pg surfaces that as an idle client error.
+      // Dropping the pool makes the next query reconnect to the new writer.
       console.error("[db] idle client error:", err.message);
+      pool = null;
     });
   }
   return pool;

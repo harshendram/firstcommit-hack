@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="80px" height="80px" viewBox="0 0 80 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Amazon Connect</title>
+  <rect x="0" y="0" width="80" height="80" fill="#E7157B"/>
+  <g fill="#FFFFFF">
+    <path d="M40 14c-12.7 0-23 10.3-23 23v13a6 6 0 0 0 6 6h4a4 4 0 0 0 4-4V38a4 4 0 0 0-4-4h-4.6C24.1 26 31.3 20 40 20s15.9 6 18.6 14H54a4 4 0 0 0-4 4v14a4 4 0 0 0 4 4h3.6C56.4 58.6 53 61 49 61h-5v6h5c8.3 0 15-6.7 15-15V37c0-12.7-10.3-23-23-23z"/>
+  </g>
+</svg>

@@ -38,7 +38,7 @@ export interface EscalationHop {
   status: "pending" | "notified" | "acknowledged" | "timed_out";
   notified_at?: string;
   phone?: string;
-  channel?: "whatsapp" | "sms" | "voice";
+  channel?: "sms" | "voice" | "push";
 }
 
 export interface TimelineEntry {

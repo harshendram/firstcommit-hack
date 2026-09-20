@@ -51,7 +51,7 @@ export interface PatientProfile {
   conditions: string[];
   medications: string[];
   preferred_language: string;
-  /** Full discharge summary text from Sarvam digitisation (if uploaded). */
+  /** Full discharge summary text from Textract digitisation (if uploaded). */
   discharge_summary?: string;
   discharge_uploaded_at?: string;
 }

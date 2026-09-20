@@ -14,7 +14,7 @@ usersRouter.post("/register", async (req, res) => {
   if (!dbConfigured() || !schemaReady()) {
     res.status(503).json({
       error:
-        "Database unavailable — set DATABASE_URL to your Supabase Postgres URI",
+        "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint",
     });
     return;
   }
@@ -36,7 +36,7 @@ usersRouter.get("/", async (_req, res) => {
   if (!dbConfigured() || !schemaReady()) {
     res.status(503).json({
       error:
-        "Database unavailable — set DATABASE_URL to your Supabase Postgres URI",
+        "Database unavailable — set DATABASE_URL to the Aurora Serverless v2 (PostgreSQL) endpoint",
     });
     return;
   }

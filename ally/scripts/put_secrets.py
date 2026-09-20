@@ -1,7 +1,8 @@
 """Create or update Ally's secret bundle in AWS Secrets Manager. Idempotent.
 
-Generates the VAPID key pair, device key and reply-token secret if they don't exist yet, and takes
-SARVAM_API_KEY from the environment (root .env). Prints only the public values.
+Generates the VAPID key pair, device key and reply-token secret if they don't exist yet.
+Speech and reasoning use the task's IAM role, so no API keys are stored here at all.
+Prints only the public values.
 
     python scripts/put_secrets.py
     python scripts/put_secrets.py --rotate device_key   # replace one value
@@ -12,7 +13,6 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
 import secrets as pysecrets
 import sys
 from pathlib import Path
@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import AWS_REGION, SECRET_NAME  # noqa: E402
 
 PUBLIC_KEYS = ("vapid_public_key",)
+KEEP = ("vapid_public_key", "vapid_private_key", "device_key", "hmac_secret")
 
 
 def b64url(data: bytes) -> str:
@@ -58,7 +59,7 @@ def save(client, bundle: dict[str, str], existed: bool) -> None:
         client.create_secret(
             Name=SECRET_NAME,
             SecretString=payload,
-            Description="Ally runtime secrets: web push (VAPID), watch device key, reply-token HMAC, Sarvam API key.",
+            Description="Ally runtime secrets: web push (VAPID), watch device key, reply-token HMAC.",
         )
 
 
@@ -77,11 +78,12 @@ def main(rotate: list[str]) -> None:
     bundle.setdefault("device_key", pysecrets.token_urlsafe(32))
     bundle.setdefault("hmac_secret", pysecrets.token_urlsafe(48))
 
-    sarvam = (os.getenv("SARVAM_API_KEY") or "").strip()
-    if sarvam:
-        bundle["sarvam_api_key"] = sarvam
-    elif not bundle.get("sarvam_api_key"):
-        print("WARNING: SARVAM_API_KEY not set — voice input stays 'not configured'.")
+    # Nothing else belongs here: Bedrock, Transcribe and Polly are all reached with
+    # the execution role's credentials, so there is no third-party key to rotate.
+    # Drop anything left over from an earlier bundle.
+    for stale in [k for k in bundle if k not in KEEP]:
+        bundle.pop(stale)
+        print(f"removed stale value {stale}")
 
     save(client, bundle, existed)
     print(f"{'updated' if existed else 'created'} secret {SECRET_NAME} ({len(bundle)} values)")

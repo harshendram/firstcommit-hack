@@ -1,19 +1,19 @@
 import { config } from "../config.js";
 import { sessionStore } from "../state/sessionStore.js";
 import type { EscalationHop } from "../types.js";
-import { normalizeE164, twilioNotifier } from "./twilio.js";
+import { normalizeE164, notifier } from "./notifications.js";
 
 type OnUpdate = () => void;
 
 /**
  * Escalation chain:
- * - live: real Twilio phone call (or WhatsApp/SMS) for the roles listed in
+ * - live: a real Amazon Connect phone call (SMS via Amazon SNS) for the roles listed in
  *   ESCALATION_CALL_ROLES; remaining hops animate as simulated status so the
  *   Command Center still shows the full chain.
  * - simulated: timed status updates only (no credentials needed).
  *
  * Acknowledgement paths: keypad "press 1" during the call, a YES reply over
- * SMS/WhatsApp, or the Family PWA "I'm On My Way" button.
+ * an SMS reply, or the Family PWA "I'm On My Way" button.
  */
 export class EscalationService {
   private timers: NodeJS.Timeout[] = [];
@@ -38,11 +38,11 @@ export class EscalationService {
     sessionStore.setEscalationChain(normalized);
     onUpdate();
 
-    const live = config.escalationMode === "live" && twilioNotifier.ready;
+    const live = config.escalationMode === "live" && notifier.ready;
 
-    if (config.escalationMode === "live" && !twilioNotifier.ready) {
+    if (config.escalationMode === "live" && !notifier.ready) {
       console.error(
-        "[escalation] ESCALATION_MODE=live but Twilio credentials missing — falling back to simulated"
+        "[escalation] ESCALATION_MODE=live but no AWS delivery channel is configured — falling back to simulated"
       );
     }
 
@@ -235,7 +235,7 @@ export class EscalationService {
         continue;
       }
 
-      const result = await twilioNotifier.notifyContact(hop, handoff);
+      const result = await notifier.notifyContact(hop, handoff);
       if (!this.isCurrentRun(runId)) return;
 
       if (!result.ok) {
@@ -252,7 +252,7 @@ export class EscalationService {
       });
       onUpdate();
       console.log(
-        `[escalation] ${hop.contact_role} contacted via ${result.channel} sid=${result.sid}`
+        `[escalation] ${hop.contact_role} contacted via ${result.channel} id=${result.id}`
       );
 
       if (hop.contact_role === "emergency_services") continue;
